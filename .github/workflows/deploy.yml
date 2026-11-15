@@ -31,6 +31,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_BASE: /nexus-idse-game/
         run: npm run build
 
       - name: Upload Pages artifact
