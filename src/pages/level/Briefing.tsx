@@ -1,8 +1,13 @@
 // Level briefing: BRIEFING | SIDE OPS | BONUS tabs and the mission entry point.
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Lock, Play, Radio, Sparkles, Trophy } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Play, Radio, RotateCcw, Sparkles, Trophy } from 'lucide-react'
 import { BONUS_XP } from '../../game/config'
+import { createSessionRecord, readSession, removeSession, writeSession } from '../../game/levelSession'
 import { useGameStore } from '../../game/store'
+import { runtimeFor } from '../../levels/runtimes'
+import { parseContextFor } from '../../shell/PersistentMission'
+import { Modal } from '../../ui/Modal'
 import { Badge } from '../../ui/Badge'
 import { NeonButton } from '../../ui/NeonButton'
 import { Panel } from '../../ui/Panel'
@@ -19,6 +24,36 @@ export function Briefing() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const progress = useGameStore((state) => state.levels[levelId])
+  const startMission = useGameStore((state) => state.startMission)
+  const runtime = runtimeFor(levelId)
+  const [confirmRestart, setConfirmRestart] = useState(false)
+  const starting = useRef(false)
+
+  // Levels 05-07: an unfinished saved run offers CONTINUE MISSION.
+  const activeSession = useMemo(() => {
+    if (!runtime.persistent) return false
+    const parsed = readSession(levelId, parseContextFor(level, runtime, progress.attempts))
+    return parsed.ok && parsed.session.status === 'active'
+  }, [level, levelId, progress.attempts, runtime])
+
+  /** BEGIN MISSION: the single counted start (attempts + 1), guarded against double clicks. */
+  const beginMission = () => {
+    if (starting.current) return
+    starting.current = true
+    const attemptIndex = startMission(levelId)
+    if (runtime.persistent) {
+      removeSession(levelId)
+      writeSession(
+        createSessionRecord(
+          levelId,
+          attemptIndex,
+          level.stages.map((stage) => stage.id),
+          runtime.persistent.initialStates,
+        ),
+      )
+    }
+    navigate(`/level/${levelId}/play`)
+  }
 
   const rawTab = params.get('tab')
   const tab: LevelTab = TAB_IDS.includes(rawTab as LevelTab) ? (rawTab as LevelTab) : 'briefing'
@@ -29,7 +64,7 @@ export function Briefing() {
     setParams(next, { replace: true })
   }
 
-  const sideOpsPlayable = levelId === 1 || levelId === 2 || levelId === 3
+  const sideOpsPlayable = Boolean(runtime.SideOp || runtime.renderChallenge)
 
   const briefing = (
     <div>
@@ -67,10 +102,25 @@ export function Briefing() {
       </p>
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <NeonButton size="lg" data-testid="btn-begin-mission" onClick={() => navigate(`/level/${levelId}/play`)}>
-          <Play size={15} aria-hidden="true" />
-          Begin mission
-        </NeonButton>
+        {runtime.BriefingActions ? (
+          <runtime.BriefingActions />
+        ) : activeSession ? (
+          <>
+            <NeonButton size="lg" data-testid="btn-continue-mission" onClick={() => navigate(`/level/${levelId}/play`)}>
+              <Play size={15} aria-hidden="true" />
+              Continue mission
+            </NeonButton>
+            <NeonButton variant="ghost" size="lg" data-testid="btn-begin-mission" onClick={() => setConfirmRestart(true)}>
+              <RotateCcw size={15} aria-hidden="true" />
+              Begin new run
+            </NeonButton>
+          </>
+        ) : (
+          <NeonButton size="lg" data-testid="btn-begin-mission" onClick={beginMission}>
+            <Play size={15} aria-hidden="true" />
+            Begin mission
+          </NeonButton>
+        )}
         <NeonButton variant="ghost" size="lg" data-testid="btn-briefing-back" onClick={() => navigate('/hub')}>
           Back to hub
         </NeonButton>
@@ -99,7 +149,7 @@ export function Briefing() {
                 size="sm"
                 variant={done ? 'ghost' : 'primary'}
                 disabled={!sideOpsPlayable}
-                tooltip={sideOpsPlayable ? undefined : 'Side operations for this level arrive in a later phase.'}
+                tooltip={sideOpsPlayable ? undefined : 'This side operation is unavailable.'}
                 data-testid={`btn-side-op-${op.id}`}
                 onClick={() => navigate(`/level/${levelId}/play?side=${encodeURIComponent(op.id)}`)}
               >
@@ -109,12 +159,6 @@ export function Briefing() {
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
                 {op.hints.length} progressive hints
               </span>
-              {!sideOpsPlayable && (
-                <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-amber">
-                  <Lock size={11} aria-hidden="true" />
-                  Later phase
-                </span>
-              )}
             </div>
           </div>
         )
@@ -205,6 +249,30 @@ export function Briefing() {
           ]}
         />
       </Panel>
+      <Modal
+        open={confirmRestart}
+        onClose={() => setConfirmRestart(false)}
+        title="Discard the saved run?"
+      >
+        <p className="text-sm text-muted">
+          Your unfinished run will be deleted and a new run starts with a new dataset. Nothing from the old run is paid.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
+          <NeonButton variant="ghost" onClick={() => setConfirmRestart(false)}>
+            Keep it
+          </NeonButton>
+          <NeonButton
+            variant="danger"
+            data-testid="btn-confirm-restart"
+            onClick={() => {
+              setConfirmRestart(false)
+              beginMission()
+            }}
+          >
+            Discard and begin
+          </NeonButton>
+        </div>
+      </Modal>
     </main>
   )
 }

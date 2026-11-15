@@ -1,7 +1,8 @@
-// LevelCard: campaign node with lock, completion and progress states.
+// LevelCard: campaign node with in-development, lock, completion and progress states.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, ChevronRight, Lock } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Construction, Lock } from 'lucide-react'
+import { IN_DEVELOPMENT_LABEL, inDevelopmentMessage, isLevelInDevelopment } from '../../game/levels/availability'
 import { visibleBonuses } from '../../game/levels/registry'
 import type { LevelDefinition, LevelProgress, Rating } from '../../game/types'
 import { Badge } from '../../ui/Badge'
@@ -41,9 +42,15 @@ export function LevelCard({ level, progress }: LevelCardProps) {
     level.bonuses.some((item) => item.id === id),
   ).length
   const visibleBonusTotal = visibleBonuses(level.id).length
-  const locked = !progress.unlocked
+  const inDevelopment = isLevelInDevelopment(level.id)
+  const locked = !inDevelopment && !progress.unlocked
+  const blocked = inDevelopment || locked
 
   const activate = () => {
+    if (inDevelopment) {
+      push({ message: inDevelopmentMessage(level.id), tone: 'info' })
+      return
+    }
     if (locked) {
       setShaking(true)
       if (timer.current !== null) window.clearTimeout(timer.current)
@@ -61,14 +68,23 @@ export function LevelCard({ level, progress }: LevelCardProps) {
     <button
       type="button"
       data-testid={`level-card-${level.id}`}
-      aria-label={`Level ${level.id}, ${level.title}, ${locked ? 'locked' : progress.completed ? 'completed' : 'available'}`}
-      title={locked ? `Complete Level ${level.id - 1}` : `Open Level ${level.id}`}
+      aria-label={`Level ${level.id}, ${level.title}, ${inDevelopment ? 'in development, not playable yet' : locked ? 'locked' : progress.completed ? 'completed' : 'available'}`}
+      aria-disabled={inDevelopment || undefined}
+      title={
+        inDevelopment
+          ? 'In development'
+          : locked
+            ? `Complete Level ${level.id - 1}`
+            : `Open Level ${level.id}`
+      }
       onClick={activate}
       className={cn(
         'group relative flex w-full flex-col rounded border bg-panel/90 p-4 text-left transition-colors',
         'nx-panel-glow',
-        locked
-          ? 'cursor-not-allowed border-border opacity-60'
+        inDevelopment
+          ? 'cursor-not-allowed border-dashed border-amber/40 opacity-70'
+          : locked
+            ? 'cursor-not-allowed border-border opacity-60'
           : progress.completed
             ? 'border-green/40 hover:border-green/70'
             : 'border-cyan/40 hover:border-cyan/80 hover:bg-cyan/[0.04]',
@@ -79,7 +95,7 @@ export function LevelCard({ level, progress }: LevelCardProps) {
         <span
           className={cn(
             'flex h-9 w-9 shrink-0 items-center justify-center rounded border font-display text-sm tracking-wider',
-            locked
+            blocked
               ? 'border-border bg-panel2 text-muted'
               : progress.completed
                 ? 'border-green/50 bg-green/10 text-green'
@@ -89,26 +105,32 @@ export function LevelCard({ level, progress }: LevelCardProps) {
           {String(level.id).padStart(2, '0')}
         </span>
         <span className="flex flex-wrap justify-end gap-1.5">
+          {inDevelopment && (
+            <Badge tone="amber">
+              <Construction size={10} aria-hidden="true" />
+              {IN_DEVELOPMENT_LABEL}
+            </Badge>
+          )}
           {locked && (
             <Badge tone="muted">
               <Lock size={10} aria-hidden="true" />
               Locked
             </Badge>
           )}
-          {!locked && progress.completed && (
+          {!blocked && progress.completed && (
             <Badge tone="green">
               <CheckCircle2 size={10} aria-hidden="true" />
               Completed
             </Badge>
           )}
-          {!locked && !progress.completed && <Badge tone="cyan">Available</Badge>}
+          {!blocked && !progress.completed && <Badge tone="cyan">Available</Badge>}
           {progress.rating && <Badge tone={ratingTone[progress.rating]}>Rating {progress.rating}</Badge>}
         </span>
       </span>
 
       <span className="mt-3 flex items-center gap-1.5">
         <span className="font-display text-sm uppercase tracking-[0.14em] text-text">{level.title}</span>
-        {!locked && (
+        {!blocked && (
           <ChevronRight
             size={14}
             aria-hidden="true"
@@ -126,6 +148,11 @@ export function LevelCard({ level, progress }: LevelCardProps) {
       {locked && (
         <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-amber">
           Complete Level {level.id - 1}
+        </span>
+      )}
+      {inDevelopment && (
+        <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-amber">
+          Not playable yet
         </span>
       )}
     </button>

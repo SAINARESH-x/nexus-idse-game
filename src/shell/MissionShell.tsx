@@ -31,6 +31,9 @@ import { cn } from '../ui/cn'
 import { MissionUiProvider } from './MissionUi'
 import type { MissionLogEntry, MissionLogInput, MissionLogTone } from './MissionUi'
 import { useMissionFlow } from './useMissionFlow'
+import type { MissionProgressSnapshot, MissionRestore } from './useMissionFlow'
+import type { MissionRunSummary } from './missionSession'
+import type { AwardSummary } from '../game/progression'
 import { useObjectives } from './useObjectives'
 import type { MissionObjectiveDef } from './useObjectives'
 
@@ -44,6 +47,15 @@ export interface MissionShellProps {
   objectives: MissionObjectiveDef[]
   tier?: Tier
   renderChallenge: (stage: StageDef, props: ChallengeProps) => ReactNode
+  /** Optional persistence hooks (Levels 5 to 7 resume a mission after a reload). */
+  restore?: MissionRestore
+  onProgress?: (snapshot: MissionProgressSnapshot) => void
+  onFinished?: (summary: MissionRunSummary, award: AwardSummary | null) => void
+  onAbort?: () => void
+  /** Restored objective ids that were already ticked. */
+  initialObjectives?: string[]
+  /** Called when a challenge ticks an objective (so it can be persisted). */
+  onObjective?: (id: string) => void
 }
 
 const toneIcon: Record<MissionLogTone, typeof Info> = {
@@ -77,12 +89,18 @@ export function MissionShell({
   objectives: objectiveDefs,
   tier = 'assisted',
   renderChallenge,
+  restore,
+  onProgress,
+  onFinished,
+  onAbort,
+  initialObjectives,
+  onObjective,
 }: MissionShellProps) {
   const navigate = useNavigate()
   const { push } = useToast()
   const completeMission = useGameStore((state) => state.completeMission)
-  const flow = useMissionFlow({ levelId, kind, sideOpId, stages, tier })
-  const objectivesApi = useObjectives(objectiveDefs)
+  const flow = useMissionFlow({ levelId, kind, sideOpId, stages, tier, restore, onProgress, onFinished, onAbort })
+  const objectivesApi = useObjectives(objectiveDefs, initialObjectives)
   const [abortOpen, setAbortOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(true)
   const [log, setLog] = useState<MissionLogEntry[]>([
@@ -109,9 +127,18 @@ export function MissionShell({
     ])
   }, [])
 
+  const objectiveRef = useRef(onObjective)
+  objectiveRef.current = onObjective
+  const completeObjective = objectivesApi.complete
   const missionUi = useMemo(
-    () => ({ completeObjective: objectivesApi.complete, log: addLog }),
-    [addLog, objectivesApi.complete],
+    () => ({
+      completeObjective: (id: string) => {
+        completeObjective(id)
+        objectiveRef.current?.(id)
+      },
+      log: addLog,
+    }),
+    [addLog, completeObjective],
   )
 
   const handleComplete = (result: ChallengeResult) => {

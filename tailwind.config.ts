@@ -12,7 +12,8 @@ export default {
         border: '#1E2A4A',
         text: '#E6ECFF',
         muted: '#8A97B8',
-        cyan: '#00E5FF',
+        // Accent token driven by a CSS variable so Tool Bay themes recolour it (opacity modifiers still work).
+        cyan: 'rgb(var(--nx-cyan-rgb) / <alpha-value>)',
         magenta: '#FF2BD6',
         amber: '#FFB020',
         green: '#3DFF9A',

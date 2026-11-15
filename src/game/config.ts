@@ -70,10 +70,23 @@ export const MAIN_XP_FORMULA = {
 
 export const CREDITS_PER_XP = 0.5
 
+/** Adaptive history keeps only the most recent entries. */
+export const ADAPTIVE_HISTORY_CAP = 50
+
+/** Adaptive tier rules (Phase 9): move one tier per completed run. */
+export const ADAPTIVE_RULES = {
+  upComposite: 85,
+  upMaxHints: 1,
+  downComposite: 55,
+  downMinHints: 4,
+  struggleBadDecisions: 3,
+  struggleMistakes: 6,
+} as const
+
 export const CALLSIGN_MIN = 3
 export const CALLSIGN_MAX = 16
 
-/** DEV_ONLY aggregate used by placeholder mission workspaces to complete a run. */
+/** DEV_ONLY aggregate used by the dev completion shortcuts. */
 export const DEV_DEMO_AGGREGATE = {
   accuracy: 1,
   decisionQuality: 1,

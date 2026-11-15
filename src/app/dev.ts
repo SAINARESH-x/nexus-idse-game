@@ -1,9 +1,4 @@
-// Dev-only feature switch shared by the workspace and the developer panel.
+// Dev-only feature switch (DEV_ONLY): true only in dev builds and tests; production builds never show dev tools.
 export function isDevEnabled(): boolean {
-  if (import.meta.env.DEV) return true
-  try {
-    return typeof localStorage !== 'undefined' && localStorage.getItem('nexus-dev') === '1'
-  } catch {
-    return false
-  }
+  return import.meta.env.DEV === true
 }

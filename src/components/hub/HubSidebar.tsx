@@ -1,5 +1,8 @@
-// HubSidebar: recruit summary, fragment archive and locked feature placeholders.
-import { Award, Coins, Lock, User, Wrench, Zap } from 'lucide-react'
+// HubSidebar: recruit summary, fragment archive, achievements and Tool Bay panels.
+import { useNavigate } from 'react-router-dom'
+import { Award, Coins, Lock, Settings as SettingsIcon, User, Wrench, Zap } from 'lucide-react'
+import { achievementsFor } from '../../game/achievements'
+import { TOOL_BAY_ITEMS } from '../../game/toolbay'
 import { FRAGMENT_TEXT, LEVELS } from '../../game/levels/registry'
 import { rankForXp } from '../../game/progression'
 import { useGameStore } from '../../game/store'
@@ -21,8 +24,8 @@ function ProfileSummary() {
       <div className="grid grid-cols-2 gap-2">
         <Stat label="Total XP" value={profile.xp} icon={<Zap size={13} />} />
         <Stat label="Credits" value={profile.credits} tone="amber" icon={<Coins size={13} />} />
-        <Stat label="Missions" value={`${completed}/7`} tone="green" icon={<Award size={13} />} />
-        <Stat label="Fragments" value={`${fragments.length}/7`} icon={<User size={13} />} />
+        <Stat label="Missions" value={`${completed}/${LEVELS.length}`} tone="green" icon={<Award size={13} />} />
+        <Stat label="Fragments" value={`${fragments.length}/${LEVELS.length}`} icon={<User size={13} />} />
       </div>
     </Panel>
   )
@@ -35,7 +38,7 @@ function FragmentArchive() {
     <Panel
       eyebrow="Memory"
       title="Story fragments"
-      action={<Badge tone="magenta">{fragments.length}/7</Badge>}
+      action={<Badge tone="magenta">{fragments.length}/{LEVELS.length}</Badge>}
       data-testid="fragment-archive"
     >
       <ul className="space-y-2">
@@ -86,49 +89,45 @@ function FragmentArchive() {
   )
 }
 
-function PlaceholderPanel({
-  eyebrow,
-  title,
-  body,
-  action,
-  icon,
-  testId,
-  buttonLabel,
-}: {
-  eyebrow: string
-  title: string
-  body: string
-  action: string
-  icon: 'award' | 'wrench'
-  testId: string
-  buttonLabel: string
-}) {
-  const Icon = icon === 'award' ? Award : Wrench
+function AchievementsPanel() {
+  const navigate = useNavigate()
+  const earned = useGameStore((state) => state.achievements.length)
+  const total = achievementsFor(LEVELS).length
   return (
-    <Panel
-      eyebrow={eyebrow}
-      title={title}
-      action={<Badge tone="muted">Soon</Badge>}
-      data-testid={testId}
-    >
+    <Panel eyebrow="Records" title="Achievements" action={<Badge tone="cyan">{earned}/{total}</Badge>} data-testid="achievements-panel">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-border bg-panel2 text-muted">
-          <Icon size={15} aria-hidden="true" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-cyan/40 bg-cyan/10 text-cyan">
+          <Award size={15} aria-hidden="true" />
         </span>
-        <p className="text-xs text-muted">{body}</p>
+        <p className="text-xs text-muted">Milestones for missions, side operations, bonuses and secrets across the campaign.</p>
       </div>
-      <NeonButton
-        size="sm"
-        variant="ghost"
-        fullWidth
-        disabled
-        tooltip={action}
-        className="mt-3"
-        data-testid={`${testId}-button`}
-      >
-        <Lock size={12} aria-hidden="true" />
-        {buttonLabel}
+      <NeonButton size="sm" variant="ghost" fullWidth className="mt-3" data-testid="achievements-panel-button" onClick={() => navigate('/achievements')}>
+        View achievements
       </NeonButton>
+    </Panel>
+  )
+}
+
+function ToolBayPanel() {
+  const navigate = useNavigate()
+  const owned = useGameStore((state) => (state.owned ?? []).length)
+  return (
+    <Panel eyebrow="Equipment" title="Tool Bay" action={<Badge tone="amber">{owned}/{TOOL_BAY_ITEMS.length} owned</Badge>} data-testid="toolbay-panel">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-amber/40 bg-amber/10 text-amber">
+          <Wrench size={15} aria-hidden="true" />
+        </span>
+        <p className="text-xs text-muted">Spend mission credits on accent themes for the whole interface.</p>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <NeonButton size="sm" variant="ghost" data-testid="toolbay-panel-button" onClick={() => navigate('/toolbay')}>
+          Open Tool Bay
+        </NeonButton>
+        <NeonButton size="sm" variant="ghost" data-testid="settings-link" onClick={() => navigate('/settings')}>
+          <SettingsIcon size={12} aria-hidden="true" />
+          Settings
+        </NeonButton>
+      </div>
     </Panel>
   )
 }
@@ -138,24 +137,8 @@ export function HubSidebar() {
     <aside className="space-y-5" aria-label="Recruit archive">
       <ProfileSummary />
       <FragmentArchive />
-      <PlaceholderPanel
-        eyebrow="Records"
-        title="Achievements"
-        body="The achievement grid is sealed until the records phase. Completed missions still count toward it."
-        action="Achievements arrive in a later phase"
-        icon="award"
-        testId="achievements-panel"
-        buttonLabel="View achievements"
-      />
-      <PlaceholderPanel
-        eyebrow="Equipment"
-        title="Tool Bay"
-        body="Purchased upgrades and analysis tools will live here once the Tool Bay is unlocked."
-        action="Tool Bay unlocks in a later phase"
-        icon="wrench"
-        testId="toolbay-panel"
-        buttonLabel="Open Tool Bay"
-      />
+      <AchievementsPanel />
+      <ToolBayPanel />
     </aside>
   )
 }

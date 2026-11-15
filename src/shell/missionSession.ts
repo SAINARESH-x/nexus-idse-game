@@ -49,6 +49,10 @@ interface StartRunInput {
   kind: 'main' | 'side'
   sideOpId?: string
   tier?: Tier
+  /** Restored stage results when a persisted mission resumes after a reload. */
+  results?: ChallengeResult[]
+  /** Restored mission-wide hint count. */
+  hintsUsed?: number
 }
 
 interface MissionSessionStore {
@@ -66,15 +70,15 @@ export const useMissionSessionStore = create<MissionSessionStore>((set) => ({
   run: null,
   summary: null,
 
-  startRun: ({ levelId, kind, sideOpId, tier = 'assisted' }) => {
+  startRun: ({ levelId, kind, sideOpId, tier = 'assisted', results = [], hintsUsed = 0 }) => {
     set({
       run: {
         levelId,
         kind,
         sideOpId,
         tier,
-        results: [],
-        hintsUsed: 0,
+        results: [...results],
+        hintsUsed: Math.max(0, Math.floor(hintsUsed)),
         startedAt: Date.now(),
       },
       summary: null,

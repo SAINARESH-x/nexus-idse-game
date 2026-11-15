@@ -13,6 +13,7 @@ import { Tooltip } from '../ui/Tooltip'
 export function Title() {
   const navigate = useNavigate()
   const hasSave = useGameStore((state) => state.profile.callsign.length > 0)
+  const restored = useGameStore((state) => state.campaignComplete === true && state.profile.callsign.length > 0)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const startNewGame = () => {
@@ -49,6 +50,11 @@ export function Title() {
         <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.28em] text-muted/70">
           Seven systems · one shattered mind
         </p>
+        {restored && (
+          <p className="mt-4 rounded border border-green/40 bg-green/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.3em] text-green" data-testid="title-restored">
+            NEXUS restored
+          </p>
+        )}
 
         <div className="mt-10 flex w-full max-w-xs flex-col gap-3 sm:max-w-sm">
           <NeonButton
@@ -73,19 +79,16 @@ export function Title() {
               Continue
             </NeonButton>
           </Tooltip>
-          <Tooltip label="Settings unlock in a later phase" className="w-full">
-            <NeonButton
-              size="md"
-              variant="ghost"
-              fullWidth
-              disabled
-              tooltip="Settings unlock in a later phase"
-              data-testid="btn-settings"
-            >
-              <Settings size={14} aria-hidden="true" />
-              Settings
-            </NeonButton>
-          </Tooltip>
+          <NeonButton
+            size="md"
+            variant="ghost"
+            fullWidth
+            onClick={() => navigate('/settings')}
+            data-testid="btn-settings"
+          >
+            <Settings size={14} aria-hidden="true" />
+            Settings
+          </NeonButton>
         </div>
       </section>
 

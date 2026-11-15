@@ -1,8 +1,9 @@
 // Mission flow: ordered stages, progressive hints, final scoring and navigation.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { levelDefinition } from '../game/levels/registry'
 import { useGameStore } from '../game/store'
+import type { AwardSummary } from '../game/progression'
 import type { ChallengeResult, LevelId, StageDef, Tier } from '../game/types'
 import { buildMissionOutcome } from './missionOutcome'
 import { useMissionSessionStore } from './missionSession'
@@ -10,12 +11,34 @@ import type { MissionBonusAward, MissionRunSummary } from './missionSession'
 
 export type MissionFlowStatus = 'active' | 'stage-clear' | 'done'
 
+/** Snapshot of mission progress, reported after every change so a level can persist it. */
+export interface MissionProgressSnapshot {
+  stageIndex: number
+  status: MissionFlowStatus
+  results: ChallengeResult[]
+  revealed: Record<string, number>
+  hintsUsed: number
+}
+
+/** Saved progress used to resume a mission after a reload (Levels 5 to 7). */
+export interface MissionRestore {
+  stageIndex: number
+  results: ChallengeResult[]
+  revealed: Record<string, number>
+}
+
 export interface UseMissionFlowOptions {
   levelId: LevelId
   kind: 'main' | 'side'
   sideOpId?: string
   stages: StageDef[]
   tier?: Tier
+  restore?: MissionRestore
+  onProgress?: (snapshot: MissionProgressSnapshot) => void
+  /** Called once after rewards are paid, before navigating to the debrief. */
+  onFinished?: (summary: MissionRunSummary, award: AwardSummary | null) => void
+  /** Called when the player aborts; the level can drop its saved session. */
+  onAbort?: () => void
 }
 
 export interface MissionFlow {
@@ -48,6 +71,10 @@ export function useMissionFlow({
   sideOpId,
   stages,
   tier = 'assisted',
+  restore,
+  onProgress,
+  onFinished,
+  onAbort,
 }: UseMissionFlowOptions): MissionFlow {
   const navigate = useNavigate()
   const startRun = useMissionSessionStore((state) => state.startRun)
@@ -60,19 +87,40 @@ export function useMissionFlow({
   const completeSideOp = useGameStore((state) => state.completeSideOp)
   const completeBonus = useGameStore((state) => state.completeBonus)
 
-  const [stageIndex, setStageIndex] = useState(0)
-  const [status, setStatus] = useState<MissionFlowStatus>('active')
-  const [currentResult, setCurrentResult] = useState<ChallengeResult | null>(null)
-  const [revealed, setRevealed] = useState<Record<string, number>>({})
+  const restoredIndex = restore
+    ? Math.min(Math.max(0, Math.floor(restore.stageIndex)), Math.max(0, stages.length - 1))
+    : 0
+  const restoredResult = restore
+    ? restore.results.find((item) => item.id === stages[restoredIndex]?.id) ?? null
+    : null
+  const [stageIndex, setStageIndex] = useState(restoredIndex)
+  const [status, setStatus] = useState<MissionFlowStatus>(restoredResult ? 'stage-clear' : 'active')
+  const [currentResult, setCurrentResult] = useState<ChallengeResult | null>(restoredResult)
+  const [revealed, setRevealed] = useState<Record<string, number>>(restore?.revealed ?? {})
+  // The restore snapshot is only read on mount; later prop changes must not rewind the mission.
+  const restoreRef = useRef(restore)
+  const progressRef = useRef(onProgress)
+  progressRef.current = onProgress
+  const finishedRef = useRef(onFinished)
+  finishedRef.current = onFinished
 
   useEffect(() => {
-    startRun({ levelId, kind, sideOpId, tier })
-    setStageIndex(0)
-    setStatus('active')
-    setCurrentResult(null)
-    setRevealed({})
+    const initial = restoreRef.current
+    const hints = initial ? Object.values(initial.revealed).reduce((sum, n) => sum + Math.max(0, n), 0) : 0
+    startRun({ levelId, kind, sideOpId, tier, results: initial?.results ?? [], hintsUsed: hints })
     return () => clearRun()
   }, [levelId, kind, sideOpId, tier, startRun, clearRun])
+
+  useEffect(() => {
+    if (status === 'done') return
+    progressRef.current?.({
+      stageIndex,
+      status,
+      results: run?.results ?? [],
+      revealed,
+      hintsUsed: run?.hintsUsed ?? 0,
+    })
+  }, [revealed, run, stageIndex, status])
 
   const stage = stages[Math.min(stageIndex, Math.max(stages.length - 1, 0))] ?? FALLBACK_STAGE
   const shownHints = revealed[stage.id] ?? 0
@@ -160,6 +208,7 @@ export function useMissionFlow({
     }
     finishRun(summary)
     setStatus('done')
+    finishedRef.current?.(summary, useGameStore.getState().lastAward)
     navigate(
       kind === 'side' && sideOpId
         ? `/level/${levelId}/debrief?side=${encodeURIComponent(sideOpId)}`
@@ -183,8 +232,9 @@ export function useMissionFlow({
   const abort = useCallback(() => {
     clearRun()
     setStatus('done')
+    onAbort?.()
     navigate(`/level/${levelId}`)
-  }, [clearRun, levelId, navigate])
+  }, [clearRun, levelId, navigate, onAbort])
 
   return {
     stage,

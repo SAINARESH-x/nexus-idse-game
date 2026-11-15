@@ -1,0 +1,13 @@
+// Barrel for the Level 04 data engine.
+export * from './types'
+export * from './rng'
+export * from './dataframe'
+export * from './format'
+export * from './ops'
+export * from './codegen'
+export * from './parser'
+export * from './session'
+export * from './fixtures'
+export * from './generator'
+export * from './assess'
+export * as engineConfig from './config'

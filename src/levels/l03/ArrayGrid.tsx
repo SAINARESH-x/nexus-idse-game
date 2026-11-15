@@ -30,6 +30,10 @@ export interface ArrayGridProps {
   /** Fires on mouse-enter so a drag can extend the selection across cells. */
   onCellMouseEnter?: (row: number, col: number, event: MouseEvent<HTMLButtonElement>) => void
   cellLabel?: (row: number, col: number) => string
+  /** Optional editor selection ring; preserves the existing tone for status colours. */
+  selected?: (row: number, col: number) => boolean
+  /** Optional short text tag (for example FLAG) so status is not shown by colour alone. */
+  marker?: (row: number, col: number) => string | null
 }
 
 export function ArrayGrid({
@@ -40,6 +44,8 @@ export function ArrayGrid({
   onCellMouseDown,
   onCellMouseEnter,
   cellLabel,
+  selected,
+  marker,
 }: ArrayGridProps) {
   const rows = toRows(array)
   const cols = array.shape[1] ?? array.data.length
@@ -52,12 +58,19 @@ export function ArrayGrid({
         {rows.map((row, rowIndex) =>
           row.map((value, colIndex) => {
             const cellTone = tone?.(rowIndex, colIndex) ?? 'default'
+            const isSelected = selected?.(rowIndex, colIndex) ?? false
+            const tag = marker?.(rowIndex, colIndex) ?? null
             const content = (
               <>
                 <span className="block text-[8px] leading-none text-muted">
                   {rowIndex},{colIndex}
                 </span>
                 <span className="block font-mono text-xs">{formatNumber(value)}</span>
+                {marker && (
+                  <span className="block h-2.5 font-mono text-[7px] font-semibold leading-[10px] tracking-[0.12em]" aria-hidden="true">
+                    {tag ?? ''}
+                  </span>
+                )}
               </>
             )
             if (!onCell) {
@@ -78,8 +91,12 @@ export function ArrayGrid({
                 onMouseDown={onCellMouseDown ? (event) => onCellMouseDown(rowIndex, colIndex, event) : undefined}
                 onMouseEnter={onCellMouseEnter ? (event) => onCellMouseEnter(rowIndex, colIndex, event) : undefined}
                 aria-label={cellLabel ? cellLabel(rowIndex, colIndex) : `row ${rowIndex}, column ${colIndex}, value ${value}`}
-                aria-pressed={cellTone === 'cyan'}
-                className={cn('rounded border px-1 py-1 text-center transition-colors hover:border-cyan', toneClasses[cellTone])}
+                aria-pressed={isSelected || (!selected && cellTone === 'cyan')}
+                className={cn(
+                  'rounded border px-1 py-1 text-center transition-colors hover:border-cyan',
+                  toneClasses[cellTone],
+                  isSelected && 'ring-2 ring-cyan ring-offset-2 ring-offset-bg',
+                )}
               >
                 {content}
               </button>

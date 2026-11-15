@@ -1,5 +1,5 @@
 // Integration smoke tests: Levels 02 and 03 dispatch real challenges and side ops through Play.
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../../../app/App'
@@ -62,5 +62,32 @@ describe('Level 03 play integration', () => {
     expect((await screen.findAllByText('RESHAPE RUSH')).length).toBeGreaterThan(0)
     expect(screen.getByLabelText(/layers \(3D\)/i)).toBeInTheDocument()
     expect(screen.getByTestId('btn-reshape-check')).toBeInTheDocument()
+  })
+
+  it('completes Mask Master through the shell and pays the side-op reward only once', async () => {
+    unlockThrough(2)
+    useGameStore.getState().completeMission(3, DEV_DEMO_AGGREGATE)
+    const playMaskMaster = async () => {
+      window.location.hash = '#/level/3/play?side=l3-side-2'
+      const user = userEvent.setup()
+      const view = render(<App />)
+      await user.click(await screen.findByTestId('btn-calculate-iqr'))
+      fireEvent.change(screen.getByTestId('input-upper-threshold'), { target: { value: '30' } })
+      fireEvent.change(screen.getByTestId('input-upper-threshold'), { target: { value: '60' } })
+      await user.click(screen.getByTestId('btn-reset-fences'))
+      await user.click(screen.getByTestId('btn-submit-detection'))
+      await user.click(await screen.findByTestId('btn-stage-next'))
+      expect(await screen.findByText(/Answer key \(original anomalies\)/)).toBeInTheDocument()
+      view.unmount()
+    }
+
+    const xpBefore = useGameStore.getState().profile.xp
+    await playMaskMaster()
+    const afterFirst = useGameStore.getState()
+    expect(afterFirst.levels[3].sideOpsDone).toContain('l3-side-2')
+    expect(afterFirst.profile.xp).toBe(xpBefore + 60)
+
+    await playMaskMaster()
+    expect(useGameStore.getState().profile.xp).toBe(afterFirst.profile.xp)
   })
 })

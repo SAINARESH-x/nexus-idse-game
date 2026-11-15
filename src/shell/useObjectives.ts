@@ -17,8 +17,10 @@ export interface ObjectivesApi {
   complete: (id: string) => void
 }
 
-export function useObjectives(definitions: MissionObjectiveDef[]): ObjectivesApi {
-  const [done, setDone] = useState<Record<string, boolean>>({})
+export function useObjectives(definitions: MissionObjectiveDef[], initialDone: string[] = []): ObjectivesApi {
+  const [done, setDone] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(initialDone.map((id) => [id, true])),
+  )
 
   const complete = useCallback((id: string) => {
     setDone((current) => (current[id] ? current : { ...current, [id]: true }))

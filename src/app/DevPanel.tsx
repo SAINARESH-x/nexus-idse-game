@@ -20,6 +20,9 @@ export function DevPanel() {
   const addXp = useGameStore((state) => state.addXp)
   const resetAll = useGameStore((state) => state.resetAll)
   const completeMission = useGameStore((state) => state.completeMission)
+  const completeAllLevels = useGameStore((state) => state.completeAllLevels)
+  const addAdaptiveEntry = useGameStore((state) => state.addAdaptiveEntry)
+  const history = useGameStore((state) => state.adaptive.history)
 
   // DEV_ONLY: the whole panel is absent from production unless nexus-dev=1.
   if (!isDevEnabled() || hidden) return null
@@ -54,6 +57,18 @@ export function DevPanel() {
     navigate(`/level/${currentLevel}/debrief`)
   }
 
+  const addL4Run = (strong: boolean) => {
+    const last = [...history].reverse().find((entry) => entry.levelId === 4)
+    addAdaptiveEntry({
+      levelId: 4,
+      tier: last?.tier ?? 'assisted',
+      composite: strong ? 92 : 40,
+      hintsUsed: strong ? 0 : 5,
+      mistakes: strong ? 0 : 6,
+    })
+    push({ message: `L4 adaptive: ${strong ? 'strong' : 'weak'} run added.`, tone: 'info' })
+  }
+
   const handleReset = () => {
     navigate('/')
     resetAll()
@@ -86,6 +101,27 @@ export function DevPanel() {
           <CheckCircle2 size={12} aria-hidden="true" />
           Complete current level (dev)
         </NeonButton>
+        <NeonButton
+          size="sm"
+          variant="ghost"
+          data-testid="dev-complete-all"
+          onClick={() => {
+            completeAllLevels()
+            push({ message: 'All seven levels completed.', tone: 'success' })
+            navigate('/hub')
+          }}
+        >
+          <CheckCircle2 size={12} aria-hidden="true" />
+          Complete all levels (dev)
+        </NeonButton>
+        <div className="grid grid-cols-2 gap-1.5">
+          <NeonButton size="sm" variant="ghost" data-testid="dev-l4-strong" onClick={() => addL4Run(true)}>
+            L4 strong
+          </NeonButton>
+          <NeonButton size="sm" variant="ghost" data-testid="dev-l4-weak" onClick={() => addL4Run(false)}>
+            L4 weak
+          </NeonButton>
+        </div>
         <NeonButton size="sm" variant="danger" data-testid="dev-reset" onClick={handleReset}>
           <RotateCcw size={12} aria-hidden="true" />
           Reset save

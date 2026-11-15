@@ -9,6 +9,7 @@
   --nx-border: #1e2a4a;
   --nx-text: #e6ecff;
   --nx-muted: #8a97b8;
+  --nx-cyan-rgb: 0 229 255;
   --nx-cyan: #00e5ff;
   --nx-magenta: #ff2bd6;
   --nx-amber: #ffb020;
@@ -185,7 +186,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
+  :root:not(.nx-motion-forced) *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
@@ -193,4 +194,28 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Settings: reduced motion forced on from the Settings page. */
+.nx-reduce-motion *,
+.nx-reduce-motion *::before,
+.nx-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Route transitions: a short fade, disabled under reduced motion. */
+@keyframes nx-route-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.nx-route {
+  animation: nx-route-fade 180ms ease-out both;
 }

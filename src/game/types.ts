@@ -133,5 +133,9 @@ export interface SaveData {
   fragments: string[]
   adaptive: { history: AdaptiveEntry[] }
   campaignComplete?: boolean
+  /** Epoch ms when Level 7's main mission was first completed; set once. */
+  campaignCompletedAt?: number
   owned?: string[]
+  /** Player settings (sound volume, reduced motion, text size). */
+  settings?: { volume: number; reducedMotion: 'auto' | 'on' | 'off'; textSize: 100 | 115 }
 }

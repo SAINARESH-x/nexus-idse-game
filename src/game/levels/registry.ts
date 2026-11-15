@@ -1,9 +1,13 @@
-// Level registry: the seven campaign definitions, fragments and placeholder content.
-import type { BonusDef, LevelDefinition, LevelId, SideOpDef, StageDef } from '../types'
+// Level registry: the seven campaign definitions (each owned by its level folder) and the story fragments.
+import type { BonusDef, LevelDefinition, LevelId } from '../types'
 import { LEVEL_IDS } from '../config'
 import { LEVEL_1 } from '../../levels/l01/definition'
 import { LEVEL_2 } from '../../levels/l02/definition'
 import { LEVEL_3 } from '../../levels/l03/definition'
+import { LEVEL_4 } from '../../levels/l04/definition'
+import { LEVEL_5 } from '../../levels/l05/definition'
+import { LEVEL_6 } from '../../levels/l06/definition'
+import { LEVEL_7 } from '../../levels/l07/definition'
 
 /** Story fragments revealed when the matching main mission is completed. */
 export const FRAGMENT_TEXT: Record<string, string> = {
@@ -16,145 +20,7 @@ export const FRAGMENT_TEXT: Record<string, string> = {
   F7: 'Predict, then test on what you have never seen. That is the only honest forecast.',
 }
 
-const stage = (id: string, title: string, subtitle: string, ...hints: string[]): StageDef => ({
-  id,
-  title,
-  subtitle,
-  hints,
-})
-
-const sideOp = (id: string, title: string, blurb: string, ...hints: string[]): SideOpDef => ({
-  id,
-  title,
-  blurb,
-  hints,
-})
-
-const bonus = (
-  id: string,
-  title: string,
-  description: string,
-  hidden = false,
-): BonusDef => ({
-  id,
-  title,
-  description,
-  hidden,
-  // Bonus conditions are wired in the phase that owns each level.
-  evaluate: () => false,
-})
-
-const bonuses = (level: number): BonusDef[] => [
-  bonus(`l${level}-bonus-1`, 'CLEAN EXECUTION', 'Finish the mission without a single mistake.'),
-  bonus(`l${level}-bonus-2`, 'NO NET', 'Complete the mission without using a hint.'),
-  bonus(`l${level}-bonus-hidden`, 'HIDDEN TRACE', 'Undocumented bonus. Find it by exploring.', true),
-]
-
-const sideOps = (first: SideOpDef, second: SideOpDef): SideOpDef[] => [first, second]
-
-export const LEVELS: LevelDefinition[] = [
-  LEVEL_1,
-  LEVEL_2,
-  LEVEL_3,
-  {
-    id: 4,
-    title: 'DATA VAULT',
-    syllabus: 'Pandas, data cleaning and validation',
-    mission: 'THE PURGE',
-    briefing:
-      'Forty-seven student records are waiting in the vault. Some are duplicates, some are missing fields, some never existed at all. This is the mission that broke NEXUS. Clean the data, and prove every decision.',
-    objectives: [
-      'Triage the corrupted student table',
-      'Classify every issue with evidence',
-      'Repair without inventing records',
-      'Pass the final integrity audit',
-    ],
-    stages: [
-      stage('l4-stage-1', 'DATABASE BREACH', 'Open the vault', 'Inspect before you edit.', 'Count rows and columns first.'),
-      stage('l4-stage-2', 'IDENTIFY THE CORRUPTION', 'Name every issue', 'Missing, duplicate and impossible values are different problems.', 'Evidence beats intuition.'),
-      stage('l4-stage-3', 'DATA RECONSTRUCTION', 'Repair with a reason', 'Never invent a value that was not there.', 'Each edit needs a justification.'),
-      stage('l4-stage-4', 'INTEGRITY CHECK', 'Prove the result', 'A repair is only done when the audit passes.', 'Run the checks again after every operation.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l4-side-1', 'DUPLICATE HUNT', 'Separate real copies from look-alikes.', 'Compare on more than one column.', 'A shared name is not proof of duplication.'),
-      sideOp('l4-side-2', 'TYPE DOCTOR', 'Normalise mismatched column types.', 'Check the values before converting.', 'Conversion failures are evidence, not noise.'),
-    ),
-    bonuses: bonuses(4),
-    fragmentId: 'F4',
-  },
-  {
-    id: 5,
-    title: 'SIGNAL SCOPE',
-    syllabus: 'Exploratory analysis and visualisation',
-    mission: 'FIND THE PATTERN',
-    briefing:
-      'The vault is clean; now make it speak. Explore distributions, compare groups and turn a spreadsheet into a picture a human can act on.',
-    objectives: [
-      'Profile the cleaned dataset',
-      'Find relationships worth reporting',
-      'Build visuals that do not mislead',
-    ],
-    stages: [
-      stage('l5-stage-1', 'DISTRIBUTION SCAN', 'Describe the shape', 'Always look at spread, not just the mean.', 'Outliers can hide in a summary table.'),
-      stage('l5-stage-2', 'CORRELATION WEB', 'Compare two measures', 'Correlation is not causation.', 'A scatter plot shows what a single number hides.'),
-      stage('l5-stage-3', 'VISUAL REPORT', 'Make it readable', 'Label both axes.', 'Start bar charts at zero.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l5-side-1', 'OUTLIER LENS', 'Explain the extreme values.', 'Check whether an outlier is an error or a fact.', 'Never delete a record just because it is unusual.'),
-      sideOp('l5-side-2', 'SEGMENT SPLIT', 'Compare meaningful groups.', 'Choose groups before looking at the outcome.', 'Small groups produce noisy averages.'),
-    ),
-    bonuses: bonuses(5),
-    fragmentId: 'F5',
-  },
-  {
-    id: 6,
-    title: 'CHANCE ENGINE',
-    syllabus: 'Statistics: sampling, correlation, hypothesis testing',
-    mission: 'SIGNAL OR NOISE',
-    briefing:
-      'A pattern is not a reason. NEXUS has been fooled by coincidence before. Learn to separate signal from noise with sampling, correlation and honest hypothesis tests.',
-    objectives: [
-      'Draw a representative sample',
-      'Measure association without overclaiming',
-      'Test whether the pattern could be chance',
-    ],
-    stages: [
-      stage('l6-stage-1', 'SAMPLE GATE', 'Who is in the sample?', 'Random sampling reduces selection bias.', 'Bigger samples narrow the uncertainty.'),
-      stage('l6-stage-2', 'CORRELATION TRIAL', 'Measure association', 'Correlation ranges from -1 to 1.', 'A strong correlation can still be spurious.'),
-      stage('l6-stage-3', 'SIGNAL TEST', 'Hypothesis and evidence', 'State the null before looking at the p-value.', 'A p-value is not the probability the null is true.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l6-side-1', 'BIAS CHECK', 'Audit how the sample was chosen.', 'Convenience samples are rarely representative.', 'Missing groups can reverse a conclusion.'),
-      sideOp('l6-side-2', 'POWER RUN', 'Ask whether the test could see an effect.', 'Small effects need large samples.', 'Power is the chance of detecting a real effect.'),
-    ),
-    bonuses: bonuses(6),
-    fragmentId: 'F6',
-  },
-  {
-    id: 7,
-    title: 'PREDICTION CORE',
-    syllabus: 'Regression, model evaluation, overfitting',
-    mission: 'FINAL FORECAST',
-    briefing:
-      'The last fragment is a warning: a model that only remembers the past is not a forecast. Fit a regression, test it on unseen data and resist the urge to chase a perfect score.',
-    objectives: [
-      'Fit a baseline regression',
-      'Evaluate on data the model has never seen',
-      'Diagnose and reduce overfitting',
-    ],
-    stages: [
-      stage('l7-stage-1', 'MODEL FOUNDRY', 'Fit a baseline', 'Start simple before adding features.', 'A residual plot exposes structure.'),
-      stage('l7-stage-2', 'VALIDATION RIFT', 'Guard the test set', 'Never tune on the data you report.', 'A single split can be unlucky.'),
-      stage('l7-stage-3', 'FORECAST CORE', 'Ship an honest model', 'Compare against a trivial baseline.', 'Report uncertainty with the prediction.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l7-side-1', 'OVERFIT TRAP', 'Spot a model that memorised.', 'Training error near zero is a warning sign.', 'Watch the gap to validation error.'),
-      sideOp('l7-side-2', 'FEATURE PRUNE', 'Remove what does not help.', 'More features are not always better.', 'Test each removal on validation data.'),
-    ),
-    bonuses: bonuses(7),
-    fragmentId: 'F7',
-  },
-]
+export const LEVELS: LevelDefinition[] = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, LEVEL_6, LEVEL_7]
 
 export const LEVEL_BY_ID: Record<LevelId, LevelDefinition> = {
   1: LEVELS[0],

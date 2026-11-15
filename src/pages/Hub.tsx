@@ -37,6 +37,8 @@ export function Hub() {
   const callsign = useGameStore((state) => state.profile.callsign)
   const levels = useGameStore((state) => state.levels)
   const completed = LEVELS.filter((level) => levels[level.id].completed).length
+  const campaignComplete = useGameStore((state) => state.campaignComplete === true)
+  const navigate = useNavigate()
 
   if (!callsign) return <NoCampaign />
 
@@ -48,11 +50,22 @@ export function Hub() {
           <Panel
             eyebrow="Campaign"
             title="SEVEN SYSTEMS"
-            action={<Badge tone={completed === 7 ? 'green' : 'cyan'}>{completed}/7 restored</Badge>}
+            action={<Badge tone={completed === LEVELS.length ? 'green' : 'cyan'}>{completed}/{LEVELS.length} restored</Badge>}
           >
             <p className="text-sm text-muted">
               Each restored system unlocks the next. Side operations and bonuses are optional, but they pay.
             </p>
+            {campaignComplete && (
+              <div
+                className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded border border-green/40 bg-green/10 px-3 py-2"
+                data-testid="hub-campaign-complete"
+              >
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-green">Campaign complete · NEXUS restored</span>
+                <NeonButton size="sm" variant="ghost" onClick={() => navigate('/ending')} data-testid="btn-replay-finale">
+                  Replay finale
+                </NeonButton>
+              </div>
+            )}
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {LEVELS.map((level) => (
                 <LevelCard key={level.id} level={level} progress={levels[level.id]} />

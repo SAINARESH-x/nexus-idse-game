@@ -90,6 +90,7 @@ export function isSaveData(value: unknown): value is SaveData {
     return false
   }
   if (value.owned !== undefined && !isStringArray(value.owned)) return false
+  if (value.campaignCompletedAt !== undefined && !isFiniteNumber(value.campaignCompletedAt)) return false
   return true
 }
 

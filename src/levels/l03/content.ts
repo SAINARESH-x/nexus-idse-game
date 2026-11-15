@@ -61,11 +61,12 @@ export const L03_SIDE_OPS: SideOpDef[] = [
   {
     id: 'l3-side-2',
     title: 'MASK MASTER',
-    blurb: 'Set a lower and upper threshold to isolate exactly the anomalous sensor readings. Precision and recall are both scored.',
+    blurb:
+      'Inspect a 6x6 sensor grid, calculate its quartiles and IQR fences, then choose your own thresholds and judge the detections with precision and recall.',
     hints: [
-      'One reading is unusually low; three are unusually high.',
-      'A threshold is strict: value < min and value > max.',
-      'Precision punishes false alarms. Recall punishes missed anomalies. Isolate exactly four cells.',
+      'Sort the 36 readings. Q1 is the median of the lower half and Q3 is the median of the upper half.',
+      'IQR = Q3 - Q1. Lower fence = Q1 - 1.5 x IQR; upper fence = Q3 + 1.5 x IQR.',
+      'A reading is flagged only when it is strictly below the lower threshold or strictly above the upper threshold. Equal values are not flagged.',
     ],
   },
 ]
@@ -78,7 +79,9 @@ export const L03_OBJECTIVES: MissionObjectiveDef[] = [
 
 export const L03_SIDE_OBJECTIVES: Record<string, MissionObjectiveDef[]> = {
   'l3-side-1': [{ id: 'l3-side-1-obj', label: 'Reshape twelve values into all three target shapes' }],
-  'l3-side-2': [{ id: 'l3-side-2-obj', label: 'Isolate exactly the four anomalous cells' }],
+  'l3-side-2': [
+    { id: 'l3-side-2-obj', label: 'Calculate the IQR fences, then submit thresholds with precision and recall at least 80%' },
+  ],
 }
 
 /** Six cycles (rows) across six sensors (columns). Sensor index 4 drifts +0.4 per cycle. */
@@ -262,14 +265,35 @@ export const L03_RESHAPE_TARGETS: Array<{ id: string; label: string; shape: numb
   { id: 'shape-2x2x3', label: '2 x 2 x 3', shape: [2, 2, 3] },
 ]
 
-export const L03_ANOMALIES: Array<[number, number]> = [
-  [0, 5],
-  [3, 4],
-  [4, 4],
-  [5, 4],
+/**
+ * Mask Master's 6x6 observed sensor dataset.
+ *
+ * Sorted readings: 5, 20, 21, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24,
+ * 25, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 30,
+ * 30, 31, 32, 50, 58, 66.
+ *
+ * Median-of-halves quartiles: Q1 = 23.5, Q3 = 28.5, IQR = 5.
+ * IQR fences: lower = 16, upper = 36. They isolate the four intended
+ * anomalies: the low reading 5 and the high readings 50, 58 and 66.
+ */
+export const L03_MASK_MASTER_VALUES: number[][] = [
+  [22, 24, 23, 25, 26, 5],
+  [20, 27, 24, 26, 23, 22],
+  [25, 28, 26, 24, 29, 23],
+  [21, 30, 27, 25, 28, 50],
+  [26, 31, 29, 27, 30, 25],
+  [23, 32, 28, 58, 24, 66],
 ]
 
-export const L03_MASK_BOUNDS = { min: 18, max: 30 }
+export const L03_MASK_MASTER_GRID = array2d(L03_MASK_MASTER_VALUES)
+
+/** Immutable ground truth used only for scoring; never shown before completion. */
+export const L03_MASK_MASTER_ANOMALIES: Array<[number, number]> = [
+  [0, 5],
+  [3, 5],
+  [5, 3],
+  [5, 5],
+]
 
 export const L03_BROADCAST_SAMPLE = array2d([
   [1, 2, 3],

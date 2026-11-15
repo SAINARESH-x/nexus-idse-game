@@ -160,10 +160,10 @@ Story: NEXUS is a campus intelligence that shattered when it learned to trust di
 | 1 | THE INTERFACE | FIRST CONTACT | Python basics: data types, strings, lists, sets, tuples, dicts | 3 | 2 | 2 + 1 | F1 |
 | 2 | LOGIC PROTOCOL | GATEKEEPER | Control flow, loops, functions | 3 | 2 | 2 + 1 | F2 |
 | 3 | MATRIX CORE | SIGNAL GRID | NumPy arrays, slicing, masks, vectorisation | 3 | 2 | 2 + 1 | F3 |
-| 4 | DATA VAULT **[INFERRED title]** | THE PURGE **[INFERRED]** | Pandas, data cleaning and validation | 4 | 2 | 2 + 1 | F4 |
-| 5 | SIGNAL SCOPE **[INFERRED]** | FIND THE PATTERN | Exploratory analysis and visualisation | 3 | 2 | 2 + 1 | F5 |
-| 6 | CHANCE ENGINE **[INFERRED]** | SIGNAL OR NOISE | Statistics: sampling, correlation, hypothesis testing | 3 | 2 | 2 + 1 | F6 |
-| 7 | PREDICTION CORE **[INFERRED]** | FINAL FORECAST | Regression, model evaluation, overfitting | 3 | 2 | 2 + 1 | F7 |
+| 4 | DATA VAULT | THE PURGE | Pandas: tabular data, cleaning and validation | 4 | 2 | 2 + 1 | F4 |
+| 5 | SIGNAL SCOPE | FIND THE PATTERN | Descriptive statistics, visualisation and EDA (incl. correlation) | 3 | 2 | 2 + 1 | F5 |
+| 6 | CHANCE ENGINE | SIGNAL OR NOISE | Probability and inferential statistics | 3 | 2 | 2 + 1 | F6 |
+| 7 | PREDICTION CORE | FINAL FORECAST | Regression, model evaluation and overfitting | 3 | 2 | 2 + 1 | F7 |
 
 Fragments **[INFERRED text]**:
 - F1: "I used to know every student by name. Then the feed turned to noise and I forgot how to read."
@@ -207,9 +207,9 @@ Shell safety: run commands only inside the project folder. No `sudo`. No global 
 
 `npm run dev` · `npm run build` (`tsc -b && vite build`) · `npm run preview` · `npm test` (`vitest run`) · `npm run typecheck` · **`npm run verify`** (typecheck, then test, then build). Deploy base path: `VITE_BASE=/nexus-idse-game/ npm run build`. HashRouter means no server rewrite rules are needed.
 
-## 11. Dev-only behaviour (must be removed from production in Phase 13)
+## 11. Dev-only behaviour (removed from production in Phase 13)
 
-`DevPanel`, routes `/dev/ui` and `/dev/engine`, and the "Complete mission (dev)" buttons are DEV tools. Until Phase 13 they show when `import.meta.env.DEV` or localStorage `nexus-dev === '1'`. Every dev-only element must be easy to find with a search for `DEV_ONLY` (add that comment next to each).
+`DevPanel`, routes `/dev/ui` and `/dev/engine`, and the "Complete mission (dev)" buttons are DEV tools. Since Phase 13 they render only when `import.meta.env.DEV` is true (dev server and tests); the `nexus-dev` escape hatch was removed and dev pages are lazily imported so production bundles exclude them. Every dev-only element must be easy to find with a search for `DEV_ONLY` (add that comment next to each).
 
 ## 12. Level 04 engine contract (summary of Phases 5 to 8)
 

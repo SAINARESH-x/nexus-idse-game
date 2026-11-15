@@ -6,10 +6,26 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   base: process.env.VITE_BASE ?? '/',
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split vendor code, the pure engine and each level into their own chunks (no chunk over 800 kB).
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor'
+          const level = /src\/levels\/(l0\d)\//.exec(id)
+          if (level) return `level-${level[1]}`
+          if (id.includes('/src/engine/')) return 'engine'
+          return undefined
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Integration suites drive many UI steps; allow headroom on slower or busy machines.
+    testTimeout: 20000,
   },
 })

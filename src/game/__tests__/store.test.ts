@@ -62,7 +62,9 @@ describe('campaign lifecycle', () => {
 
   it('pays nothing for a repeated main mission with no improvement', () => {
     state().newGame('Test')
+    state().startMission(1)
     state().completeMission(1, DEV_DEMO_AGGREGATE)
+    state().startMission(1)
     const replay = state().completeMission(1, DEV_DEMO_AGGREGATE)
     expect(replay.xpGained).toBe(0)
     expect(replay.creditsGained).toBe(0)
@@ -163,5 +165,45 @@ describe('save import and export', () => {
     expect(state().profile.xp).toBe(120)
     expect(state().levels[1].completed).toBe(true)
     expect(state().levels[2].unlocked).toBe(true)
+  })
+})
+
+describe('mission starts, stats and campaign completion', () => {
+  it('increments attempts only in startMission and returns the pre-increment index', () => {
+    state().newGame('Test')
+    expect(state().startMission(4)).toBe(0)
+    expect(state().startMission(4)).toBe(1)
+    expect(state().levels[4].attempts).toBe(2)
+    state().completeMission(1, DEV_DEMO_AGGREGATE)
+    expect(state().levels[1].attempts).toBe(0)
+  })
+
+  it('records the minimum hints over completions', () => {
+    state().newGame('Test')
+    state().completeMission(1, { ...DEV_DEMO_AGGREGATE, hintsUsed: 3 })
+    expect(state().levels[1].stats.minHints).toBe(3)
+    state().completeMission(1, { ...DEV_DEMO_AGGREGATE, hintsUsed: 5 })
+    expect(state().levels[1].stats.minHints).toBe(3)
+    state().completeMission(1, { ...DEV_DEMO_AGGREGATE, hintsUsed: 0 })
+    expect(state().levels[1].stats.minHints).toBe(0)
+  })
+
+  it('sets campaignComplete once when Level 7 completes', () => {
+    state().newGame('Test')
+    state().completeMission(7, { ...DEV_DEMO_AGGREGATE, accuracy: 0.5 })
+    const first = state().campaignCompletedAt
+    expect(state().campaignComplete).toBe(true)
+    expect(typeof first).toBe('number')
+    state().completeMission(7, DEV_DEMO_AGGREGATE)
+    expect(state().campaignCompletedAt).toBe(first)
+  })
+
+  it('caps adaptive history at 50 entries and merges stats', () => {
+    state().newGame('Test')
+    for (let i = 0; i < 60; i += 1) state().completeMission(1, DEV_DEMO_AGGREGATE)
+    expect(state().adaptive.history).toHaveLength(50)
+    state().recordStats(4, { bestIntegrity: 91 })
+    state().recordStats(4, { ghostsFound: 2 })
+    expect(state().levels[4].stats).toMatchObject({ bestIntegrity: 91, ghostsFound: 2 })
   })
 })

@@ -1,4 +1,5 @@
 // NeonButton: primary/ghost/danger action button with sm/md/lg sizes and a disabled tooltip.
+import { playSound } from '../game/sound'
 import { forwardRef } from 'react'
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from './cn'
@@ -30,7 +31,7 @@ const sizes: Record<NeonButtonSize, string> = {
 }
 
 export const NeonButton = forwardRef<HTMLButtonElement, NeonButtonProps>(function NeonButton(
-  { variant = 'primary', size = 'md', fullWidth, tooltip, className, disabled, children, ...rest },
+  { variant = 'primary', size = 'md', fullWidth, tooltip, className, disabled, children, onClick, ...rest },
   ref,
 ) {
   return (
@@ -49,6 +50,10 @@ export const NeonButton = forwardRef<HTMLButtonElement, NeonButtonProps>(functio
         className,
       )}
       {...rest}
+      onClick={(event) => {
+        playSound('click')
+        onClick?.(event)
+      }}
     >
       {children}
     </button>

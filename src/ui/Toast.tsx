@@ -1,20 +1,27 @@
 // Toast system: provider plus useToast hook, announced through an aria-live region.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { CheckCircle2, Info, TriangleAlert, X } from 'lucide-react'
+import { CheckCircle2, Info, OctagonAlert, TriangleAlert, X } from 'lucide-react'
+import { playSound } from '../game/sound'
 import { cn } from './cn'
 
-export type ToastTone = 'info' | 'success' | 'warning'
+export type ToastTone = 'info' | 'success' | 'warning' | 'error'
 
 export interface ToastInput {
   message: string
   tone?: ToastTone
   /** Milliseconds before auto-dismiss; 0 keeps the toast until dismissed. */
   duration?: number
+  /** Optional inline action, e.g. UNDO after a bad decision. */
+  action?: { label: string; onClick: () => void }
 }
 
-interface ToastItem extends Required<Omit<ToastInput, never>> {
+interface ToastItem {
   id: number
+  message: string
+  tone: ToastTone
+  duration: number
+  action?: { label: string; onClick: () => void }
 }
 
 interface ToastContextValue {
@@ -28,12 +35,14 @@ const toneStyle: Record<ToastTone, string> = {
   info: 'border-cyan/50 text-cyan',
   success: 'border-green/50 text-green',
   warning: 'border-amber/50 text-amber',
+  error: 'border-red/50 text-red',
 }
 
 const toneIcon = {
   info: Info,
   success: CheckCircle2,
   warning: TriangleAlert,
+  error: OctagonAlert,
 } as const
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -51,9 +60,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const push = useCallback(
-    ({ message, tone = 'info', duration = 4000 }: ToastInput) => {
+    ({ message, tone = 'info', duration = 4000, action }: ToastInput) => {
       const id = nextId.current++
-      setToasts((current) => [...current.slice(-3), { id, message, tone, duration }])
+      setToasts((current) => [...current.slice(-3), { id, message, tone, duration, action }])
+      if (tone === 'success') playSound('success')
+      else if (tone === 'error') playSound('error')
       if (duration > 0) {
         timers.current.set(
           id,
@@ -96,6 +107,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               <Icon size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
               <p className="flex-1 text-sm text-text">{toast.message}</p>
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick()
+                    dismiss(toast.id)
+                  }}
+                  className="rounded border border-current px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] hover:bg-white/5"
+                >
+                  {toast.action.label}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}

@@ -5,6 +5,8 @@ import { NeonButton } from '../ui/NeonButton'
 
 interface ErrorBoundaryProps {
   children: ReactNode
+  /** Changing this key (e.g. the route path) clears a previous fault. */
+  resetKey?: string
 }
 
 interface ErrorBoundaryState {
@@ -14,6 +16,12 @@ interface ErrorBoundaryState {
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false, message: '' }
+
+  componentDidUpdate(previous: ErrorBoundaryProps) {
+    if (this.state.hasError && previous.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, message: '' })
+    }
+  }
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
     return { hasError: true, message: error instanceof Error ? error.message : 'Unknown fault' }

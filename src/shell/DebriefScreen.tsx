@@ -13,7 +13,10 @@ import {
 } from 'lucide-react'
 import type { AwardSummary } from '../game/progression'
 import { hintFactor } from '../game/progression'
+import { isLevelInDevelopment } from '../game/levels/availability'
 import { FRAGMENT_TEXT } from '../game/levels/registry'
+import { motionReduced } from '../game/settings'
+import { playSound } from '../game/sound'
 import { useGameStore } from '../game/store'
 import type { Decision, LevelDefinition, LevelId } from '../game/types'
 import { Badge } from '../ui/Badge'
@@ -33,11 +36,7 @@ export interface DebriefScreenProps {
   sideOpId?: string | null
 }
 
-const instantMotion = () =>
-  import.meta.env.MODE === 'test' ||
-  (typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+const instantMotion = () => import.meta.env.MODE === 'test' || motionReduced()
 
 function CountUp({ value, prefix = '+' }: { value: number; prefix?: string }) {
   const [instant] = useState(instantMotion)
@@ -114,7 +113,11 @@ function DecisionRow({ decision }: { decision: Decision }) {
 export function DebriefScreen({ levelId, level, award, run, sideOpId }: DebriefScreenProps) {
   const navigate = useNavigate()
   const levels = useGameStore((state) => state.levels)
+  const campaignComplete = useGameStore((state) => state.campaignComplete === true)
   const [rankOpen, setRankOpen] = useState(Boolean(award?.rankUp))
+  useEffect(() => {
+    if (award?.rankUp) playSound('rankUp')
+  }, [award?.rankUp])
   const nextLevel = levelId < 7 ? levels[(levelId + 1) as LevelId] : null
   const isSide = Boolean(sideOpId)
   const sideOp = sideOpId ? level.sideOps.find((item) => item.id === sideOpId) : undefined
@@ -280,13 +283,29 @@ export function DebriefScreen({ levelId, level, award, run, sideOpId }: DebriefS
                     <RotateCcw size={14} aria-hidden="true" />
                     Replay mission
                   </NeonButton>
-                  {nextLevel?.unlocked && (
+                  {nextLevel?.unlocked && !isLevelInDevelopment((levelId + 1) as LevelId) && (
                     <NeonButton variant="ghost" onClick={() => navigate(`/level/${levelId + 1}`)} data-testid="btn-debrief-next">
                       Next level
                       <ArrowRight size={14} aria-hidden="true" />
                     </NeonButton>
                   )}
+                  {levelId < 7 && isLevelInDevelopment((levelId + 1) as LevelId) && (
+                    <NeonButton
+                      variant="ghost"
+                      disabled
+                      data-testid="btn-debrief-next-dev"
+                      tooltip={`Level ${levelId + 1} is in development and not playable in this interim build.`}
+                    >
+                      Level {String(levelId + 1).padStart(2, '0')}: in development
+                    </NeonButton>
+                  )}
                 </>
+              )}
+              {!isSide && levelId === 7 && campaignComplete && (
+                <NeonButton onClick={() => navigate('/ending')} data-testid="btn-continue-finale">
+                  Continue to finale
+                  <ArrowRight size={14} aria-hidden="true" />
+                </NeonButton>
               )}
               <NeonButton variant="ghost" onClick={() => navigate('/hub')} data-testid="btn-debrief-hub">
                 Return to hub
