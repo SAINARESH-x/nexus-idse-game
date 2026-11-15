@@ -7,3 +7,4 @@ coverage
 .DS_Store
 .vscode
 opencode.local.json
+.claude/scheduled_tasks.lock
