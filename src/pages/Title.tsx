@@ -1,14 +1,24 @@
-// Title screen: NEXUS wordmark, animated background and campaign entry points.
+// Title screen: NEXUS wordmark, campaign entry points and new-game confirmation.
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Radio, Settings } from 'lucide-react'
 import { ParticleField } from '../components/ParticleField'
+import { useGameStore } from '../game/store'
 import { Badge } from '../ui/Badge'
 import { GlitchTitle } from '../ui/GlitchTitle'
+import { Modal } from '../ui/Modal'
 import { NeonButton } from '../ui/NeonButton'
 import { Tooltip } from '../ui/Tooltip'
 
 export function Title() {
   const navigate = useNavigate()
+  const hasSave = useGameStore((state) => state.profile.callsign.length > 0)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const startNewGame = () => {
+    if (hasSave) setConfirmOpen(true)
+    else navigate('/new')
+  }
 
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden">
@@ -25,7 +35,7 @@ export function Title() {
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted">Nexus terminal</span>
         </div>
-        <Badge tone="green">System standby</Badge>
+        <Badge tone={hasSave ? 'green' : 'muted'}>{hasSave ? 'Save detected' : 'System standby'}</Badge>
       </header>
 
       <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-12 text-center">
@@ -45,19 +55,20 @@ export function Title() {
             size="lg"
             fullWidth
             data-testid="btn-new-game"
-            onClick={() => navigate('/hub')}
+            onClick={startNewGame}
             aria-label="Start a new game"
           >
             New game
           </NeonButton>
-          <Tooltip label="No saved game" className="w-full">
+          <Tooltip label={hasSave ? 'Resume campaign' : 'No saved game'} className="w-full">
             <NeonButton
               size="lg"
               variant="ghost"
               fullWidth
-              disabled
-              tooltip="No saved game"
+              disabled={!hasSave}
+              tooltip={hasSave ? 'Resume campaign' : 'No saved game'}
               data-testid="btn-continue"
+              onClick={() => navigate('/hub')}
             >
               Continue
             </NeonButton>
@@ -82,6 +93,35 @@ export function Title() {
         <span>Semester 5 - IDSE</span>
         <span className="text-muted/60">Build 0.1 · offline-ready</span>
       </footer>
+
+      <Modal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Start a new campaign?"
+        footer={
+          <>
+            <NeonButton variant="ghost" onClick={() => setConfirmOpen(false)} data-testid="btn-cancel-new-game">
+              Cancel
+            </NeonButton>
+            <NeonButton
+              variant="danger"
+              data-testid="btn-confirm-new-game"
+              onClick={() => {
+                setConfirmOpen(false)
+                navigate('/new')
+              }}
+            >
+              Erase and continue
+            </NeonButton>
+          </>
+        }
+      >
+        <p>
+          A save already exists. Creating a new campaign replaces the current callsign, XP, credits and fragment
+          archive.
+        </p>
+        <p className="mt-3 font-mono text-xs text-amber">This cannot be undone.</p>
+      </Modal>
     </main>
   )
 }
