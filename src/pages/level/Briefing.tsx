@@ -29,7 +29,7 @@ export function Briefing() {
     setParams(next, { replace: true })
   }
 
-  const sideOpsPlayable = levelId === 1
+  const sideOpsPlayable = levelId === 1 || levelId === 2 || levelId === 3
 
   const briefing = (
     <div>

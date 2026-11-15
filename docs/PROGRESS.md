@@ -2,7 +2,9 @@
 
 ## Current state
 
-**Phase 3 complete.** The game now has a reusable mission shell, a challenge framework, two generic mechanics, a full campaign core and **Level 01 is playable end to end**: briefing tabs, three main stages, two side operations, three bonuses, scoring, debrief, XP/credits and fragment recovery. Levels 02–07 keep honest workspaces until their phases. Level 04 remains the first deep implementation (Phases 5–8). 76 tests pass; `npm run verify` is green.
+**Phase 4 implementation complete; manual browser acceptance pending.** The game now has a reusable mission shell, a challenge framework, two generic mechanics, a full campaign core and **Levels 01–03 playable end to end**: briefing tabs, three main stages, two side operations, three bonuses, scoring, debrief, XP/credits and fragment recovery. Level 02 (LOGIC PROTOCOL) and Level 03 (MATRIX CORE) use real definitions, real engines and real challenge components. Levels 04–07 keep honest workspaces until their phases. Level 04 remains the first deep implementation (Phases 5–8). **Phase 5 is the next phase.**
+
+`npm run verify` is green: typecheck passes, 160 tests pass in 24 files, and the production build succeeds. Manual browser verification of the Level 02/03 flows is still required (see the Phase 4 VERIFY list below).
 
 ### How to run
 
@@ -34,7 +36,7 @@ Production base path: `VITE_BASE=/nexus-idse-game/ npm run build`.
 - `src/game/progression.ts` — pure functions: `aggregate`, `hintFactor`, `compositeScore`, `ratingForScore`, `rankForXp`, `nextRank`, `xpToNextRank`, `rankProgress`, `xpForMain`, `xpForSideOp`, `creditsForXp`, `isValidCallsign`, `applyAward`, `createLevelProgress`, `createInitialLevels`, `applyUnlockChain`.
 - `src/game/save.ts` — guarded localStorage (`safeStorage`), export envelope (`{version, data}`), schema validation (`isSaveData`), `parseSave`, `serializeSave`, `clearNexusStorage`.
 - `src/game/store.ts` — zustand + persist store (`nexus-save-v1`, version 1) with all campaign actions.
-- `src/game/levels/registry.ts` — seven `LevelDefinition` entries. Level 01 is the real data-driven definition from `src/levels/l01/definition.ts`; Levels 02–07 still carry placeholder stages, side ops and bonus evaluators, with real titles, syllabus lines, missions, briefings, objectives, exact counts and F1–F7 fragment text. Also `LEVEL_BY_ID`, `levelDefinition`, `visibleBonuses`, `parseLevelId`, `FRAGMENT_TEXT`.
+- `src/game/levels/registry.ts` — seven `LevelDefinition` entries. Levels 01–03 are the real data-driven definitions from `src/levels/l01`, `l02` and `l03`; Levels 04–07 still carry placeholder stages, side ops and bonus evaluators, with real titles, syllabus lines, missions, briefings, objectives, exact counts and F1–F7 fragment text. Also `LEVEL_BY_ID`, `levelDefinition`, `visibleBonuses`, `parseLevelId`, `FRAGMENT_TEXT`.
 
 ### Mission shell
 
@@ -64,6 +66,31 @@ Production base path: `VITE_BASE=/nexus-idse-game/ npm run build`.
 - `src/levels/l01/DictDetectiveChallenge.tsx` + `dictData.ts` + `dictAccess.ts` — eight nested student records, JSON tree view and four access-chain tasks.
 - `src/levels/l01/bonuses.ts` — pure evaluators for clean sweep (`facts.cleanSweep`), no hints (`session.hintsUsed === 0`) and the easter egg (`facts.easterEgg`).
 
+### Level 02 (LOGIC PROTOCOL / GATEKEEPER)
+
+- `src/levels/l02/definition.ts` — `LEVEL_2`: three stages, two side ops, visible ELEGANT RULES and ZERO RETRIES bonuses plus hidden DEAD CODE.
+- `src/levels/l02/content.ts` — 12 rule packets, expected behaviour table, three loop goals, function blocks and hidden tests, boolean puzzles, range target, copy and three hints per challenge.
+- `src/levels/l02/engine.ts` — pure rule-stack evaluation, mismatch explanations, loop tracing, generated Python, semantic function-block execution, `range()` simulation and boolean evaluators.
+- `src/levels/l02/RuleBuilderChallenge.tsx` — visual condition/action rule stack with up/down ordering, AND/OR joins, live generated Python, animated packet results, target table and hidden dead-code archive.
+- `src/levels/l02/LoopLabChallenge.tsx` — configurable loop filter, accumulator, break and continue, step trace and three target goals.
+- `src/levels/l02/FunctionForgeChallenge.tsx` — two functions assembled from ordered semantic blocks, hidden-test results, checksum/source feedback and a 20-packet reuse loop.
+- `src/levels/l02/OffByOneChallenge.tsx` — range repair side op with trace comparison.
+- `src/levels/l02/BooleanGauntletChallenge.tsx` — three truth-table circuits using a shared boolean evaluator.
+- `src/levels/l02/bonuses.ts` — pure evaluators for ELEGANT RULES (`extra.elegant`), ZERO RETRIES (`extra.zeroRetries`) and hidden DEAD CODE (`extra.deadCodeSpotted`).
+
+### Level 03 (MATRIX CORE / SIGNAL GRID)
+
+- `src/levels/l03/definition.ts` — `LEVEL_3`: three stages, two side ops, visible ONE-LINER and NO HINTS bonuses plus hidden PATTERN.
+- `src/levels/l03/nd.ts` — immutable mini-NumPy for 1D/2D slicing, negative indices, stepped slices, boolean masks, axis reductions, broadcasting and arbitrary-shape reshape. Construction and reshape accept higher dimensions; slicing, reductions and broadcasting are intentionally limited to 1D/2D and the UI says so.
+- `src/levels/l03/content.ts` — 6×6 sensor grid, anatomy arrays, build targets, five slice/mask goals, reshape targets, anomaly bounds and three hints per challenge. Column 4 drifts by +0.4 per row and has the largest column mean.
+- `src/levels/l03/ArrayGrid.tsx` — shared clickable/read-only grid with cell tones and formatted values.
+- `src/levels/l03/ArrayWorkbenchChallenge.tsx` — shape/ndim/dtype questions and three array-construction targets.
+- `src/levels/l03/SliceLabChallenge.tsx` — clickable grid synced with typed Python slices and boolean masks; typed masks sync the threshold slider. All five goals require the correct selection, and the mask goal requires the mask to be applied.
+- `src/levels/l03/vectorLabLogic.ts` + `VectorLabChallenge.tsx` — column-mean normalisation, operation chips, drift detection, Python-loop comparison and operation counting. Completion records the one-liner method and hidden pattern flag.
+- `src/levels/l03/ReshapeRushChallenge.tsx` — one set of twelve values reshaped into 1D, 2D and 2×2×3 targets, including a 3D layers input.
+- `src/levels/l03/maskLogic.ts` + `MaskMasterChallenge.tsx` — two-threshold anomaly isolation with precision/recall feedback and perfect-mask detection.
+- `src/levels/l03/bonuses.ts` — pure evaluators for ONE-LINER, NO HINTS and hidden PATTERN.
+
 ### UI
 
 - `src/pages/Title.tsx` — save-aware CONTINUE, NEW GAME confirmation modal when a save exists.
@@ -73,8 +100,8 @@ Production base path: `VITE_BASE=/nexus-idse-game/ npm run build`.
 - `src/components/hub/LevelCard.tsx` — LOCKED / AVAILABLE / COMPLETED states, rating badge, stage/side-op/bonus counts, locked-card shake + toast.
 - `src/components/hub/HubSidebar.tsx` — recruit summary, ENCRYPTED fragment archive, disabled Achievements and Tool Bay placeholders.
 - `src/pages/level/LevelGate.tsx` — nested route gate; locked level or no save redirects to the hub with a toast.
-- `src/pages/level/Briefing.tsx` — BRIEFING | SIDE OPS | BONUS tabs (URL `?tab=`), story, objectives, stage cards, bonus listing (hidden bonuses read `???` until earned) and side-op launch. Side ops outside Level 01 are visibly disabled with a `Later phase` badge.
-- `src/pages/level/Play.tsx` — Level 01 runs the real `MissionShell` for the main mission and both side ops; `?side=<id>` selects a side op. Levels 02–07 keep an honest placeholder plus the DEV_ONLY completion button.
+- `src/pages/level/Briefing.tsx` — BRIEFING | SIDE OPS | BONUS tabs (URL `?tab=`), story, objectives, stage cards, bonus listing (hidden bonuses read `???` until earned) and side-op launch. Side ops for Levels 01–03 are playable; later levels are visibly disabled with a `Later phase` badge.
+- `src/pages/level/Play.tsx` — Levels 01–03 run the real `MissionShell` for the main mission and both side ops; `?side=<id>` selects a side op. Levels 04–07 keep an honest placeholder plus the DEV_ONLY completion button.
 - `src/pages/level/Debrief.tsx` — thin route wrapper that reads the transient run summary and passes it to `DebriefScreen`; side-op debriefs are selected with `?side=<id>`.
 - `src/app/DevPanel.tsx` — floating bottom-left panel (DEV or `nexus-dev=1`) with unlock all, +500 XP, complete current level, reset and hide.
 - `src/app/dev.ts` — shared `isDevEnabled()` switch.
@@ -83,7 +110,7 @@ Production base path: `VITE_BASE=/nexus-idse-game/ npm run build`.
 ### Tests
 
 - `src/game/__tests__/progression.test.ts` — 17 tests: rank boundaries, next rank, rating thresholds, composite weights and hint floor, aggregation, XP/credit formulas, replay improvements, once-only side ops/bonuses, rank-up, initial locks, unlock chain and callsign validation.
-- `src/game/__tests__/store.test.ts` — 12 tests: new game, invalid callsign, Level 1 completion and unlock, replay payout, side ops/bonuses, stages, dev XP/unlock, export/import round trip, invalid imports, reset keys and rehydration.
+- `src/game/__tests__/store.test.ts` — 13 tests: new game, invalid callsign, Level 1 completion and unlock, Level 2/3 completion, F2/F3 recovery, replay payout, side ops/bonuses, stages, dev XP/unlock, export/import round trip, invalid imports, reset keys and rehydration.
 - `src/game/levels/__tests__/registry.test.ts` — 3 tests: seven levels, exact stage/side-op/bonus counts, Level 04 stage names, route id parsing.
 - `src/app/__tests__/campaignFlow.test.tsx` — 5 tests: full new-game-to-level-2 flow, replay 0 XP, dev panel shortcuts, locked-route redirect, CONTINUE with a save.
 - `src/pages/__tests__/Title.test.tsx` — 2 tests: initial disabled CONTINUE, replacement confirmation modal.
@@ -95,8 +122,19 @@ Production base path: `VITE_BASE=/nexus-idse-game/ npm run build`.
 - `src/levels/l01/__tests__/typeTrap.test.ts` — 3 tests: all six answers, correct scoring and explanations.
 - `src/levels/l01/__tests__/bonuses.test.ts` — 3 tests: clean sweep, no-assistance and easter-egg evaluators.
 - `src/levels/l01/__tests__/level01Flow.test.tsx` — 1 integration test: briefing → hints → stage 1 sort → stage 2 unlock.
+- `src/levels/l02/__tests__/engine.test.ts` — 18 tests: reference rule table, starter-stack failures, AND/OR joins, mismatch explanations, loop goals, function-block solutions and failures, range repair and boolean truth tables.
+- `src/levels/l02/__tests__/bonuses.test.ts` — 4 tests: ELEGANT RULES, ZERO RETRIES, hidden DEAD CODE and definition wiring.
+- `src/levels/l02/__tests__/wiring.test.ts` — 8 tests: real Level 02/03 registry definitions, bonus wiring, side-op objectives and challenge-id resolution.
+- `src/levels/l02/__tests__/ruleBuilder.test.tsx` — 1 widget test: running the starter stack and clearing stale outcomes after an edit.
+- `src/levels/l03/__tests__/nd.test.ts` — 25 tests: construction, dtype, slicing (including negative/stepped indices), reshape, masks, axis reductions, broadcasting and selection formatting.
+- `src/levels/l03/__tests__/vectorLabLogic.test.ts` — 12 tests: normalisation, broadcasting, drift detection, one-liner, operation counts and additional vector operation chips.
+- `src/levels/l03/__tests__/maskLogic.test.ts` — 5 tests: perfect mask, precision/recall penalties and missed anomalies.
+- `src/levels/l03/__tests__/bonuses.test.ts` — 4 tests: ONE-LINER, NO HINTS, hidden PATTERN and definition wiring.
+- `src/levels/l03/__tests__/sliceLabFlow.test.tsx` — 1 completion test: all five slice goals, including applying the threshold-30 mask.
+- `src/levels/l03/__tests__/vectorLabFlow.test.tsx` — 1 completion test: one-liner method and hidden pattern captured in the result.
+- `src/pages/level/__tests__/level23Play.test.tsx` — 4 tests: Level 02 RuleBuilder and Off-by-One routes, Level 03 Array Workbench and 3D Reshape Rush route.
 
-Total: 76 tests in 13 files.
+**Total: 160 tests in 24 files.** `npm run verify` (typecheck → test → production build) passes. Manual browser verification of the Level 02/03 flows remains pending.
 
 ## Store public API
 
@@ -134,14 +172,21 @@ State shape: `SaveData` (`profile`, `levels`, `achievements`, `fragments`, `adap
 
 ## Decisions
 
-- **MissionSession is concrete and shared.** `BonusDef.evaluate` receives `{ levelId, kind, results, hintsUsed, mistakes, decisions, facts }`. Challenge-specific facts live in `facts` (for example `cleanSweep`, `easterEgg`) so evaluators stay pure and unit-testable instead of peeking at component state. Levels 02–07 keep placeholder evaluators that return `false`.
+- **MissionSession is concrete and shared.** `BonusDef.evaluate` receives `{ levelId, kind, results, hintsUsed, mistakes, decisions, facts }`. Challenge-specific facts live in `facts` (for example `cleanSweep`, `easterEgg`, `elegant`, `deadCodeSpotted`, `oneLiner`, `patternNoticed`) so evaluators stay pure and unit-testable instead of peeking at component state. Levels 04–07 keep placeholder evaluators that return `false`.
 - **Stage results are the unit of progress.** `useMissionFlow` records one `ChallengeResult` per stage, replacing a prior result for the same id. Stage N+1 only opens after stage N reports a result. Stage completion is in-memory only; the campaign save marks the whole mission complete at the end through `completeMission`.
 - **Bonuses are evaluated before the main award.** This keeps `lastAward` as the mission award shown by the debrief, while bonus XP is paid through `completeBonus` and surfaced separately in `MissionRunSummary.bonuses`.
 - **Hints are counted in two places.** The shell owns per-stage revealed counts, and the transient mission run owns the canonical mission-wide `hintsUsed` used by scoring and bonuses. A hint already revealed cannot be counted twice.
 - **Mission runs are transient.** `useMissionSessionStore` holds the active run and the latest debrief summary in memory. Campaign progress is persisted by the main store; the run is not, so a mid-mission reload restarts the workspace.
 - **Debrief animation is test/reduced-motion safe.** Count-up and typewriter render their final text under `import.meta.env.MODE === 'test'` or `prefers-reduced-motion`, which keeps assertions deterministic and honours accessibility.
-- **Side ops reuse the shell.** A Level 01 side op is adapted into a one-stage `StageDef` at the route layer, so mission flow, hints, abort and debrief are identical to a main mission.
+- **Side ops reuse the shell.** A Level 01–03 side op is adapted into a one-stage `StageDef` at the route layer, so mission flow, hints, abort and debrief are identical to a main mission.
 - **Level 01 data is separated from components.** Stage copy, transmission targets, type-trap answers and dict tasks live in pure modules with tests; components only render and dispatch.
+- **Level 02 rules use explicit precedence.** The reference stack checks checksum failure first, then empty/size-invalid packets, then large unknown packets, then high priority; the default action is QUARANTINE. The starter stack is deliberately wrong so ordering and the missing `AND source == 'unknown'` condition have to be discovered.
+- **Level 02 function blocks are semantic, not arbitrary code.** `FunctionForge` interprets known block ids through a hand-written switch, keeps hidden tests calling `<name>(packet)`, and never executes user text.
+- **Level 02 loop goals are exact.** Valid size sum is 131, count-before-first-corrupt is 3, and the append goal excludes empty sizes while retaining corrupted non-empty sizes.
+- **Level 03 uses a 6×6 sensor grid.** Column 4 drifts by +0.4 per row and has the largest column mean. Slice goals cover a row, a column, a rectangular block, every other column and a threshold mask.
+- **Level 03 mini-NumPy is deliberately scoped.** Construction and reshape support higher dimensions, while slicing, reductions and broadcasting are limited to 1D/2D; the UI states this simplification rather than pretending to be full NumPy.
+- **Level 03 operation counts make vectorisation visible.** One vector operation is compared with `cells + cols` loop operations, so the benefit is concrete without inflating the score.
+- **Hidden Level 02/03 bonuses are earned before stage completion.** DEAD CODE is flagged in the archive before the stack succeeds; PATTERN is flagged in the Mission Log before the vector stage completes.
 - **Stage progress lives in `LevelProgress.stats`.** Keys are `stage:<id>` with boolean values, which keeps the AGENTS type shape intact and makes hub counts derivable.
 - **Stage completion marks.** `completeMission` marks every stage of that level complete and increments `attempts`; `completeStage` remains available for real mechanics.
 - **Adaptive history uses `assisted` for now.** The store records composite/hints/mistakes per completion. Tier selection lands with adaptive difficulty; `completeMission` accepts an optional tier so Level 04 can pass it later.
@@ -156,13 +201,13 @@ State shape: `SaveData` (`profile`, `levels`, `achievements`, `fragments`, `adap
 
 ## Placeholders still open
 
-- Mission workspaces for Levels 02, 03, 05, 06 and 07 are explicitly labelled placeholders; only the DEV completion button acts. Level 01 is fully playable.
-- Level 01 side ops outside the level show an honest `NOT AVAILABLE / Later phase` panel; Level 01 side ops are playable.
-- Level 04 engine, pandas-like session, tabs and real stage flow (Phases 5–8).
-- Bonus evaluators for Levels 02–07 return `false` until each level defines its real conditions.
+- Mission workspaces for Levels 05, 06 and 07 are explicitly labelled placeholders; only the DEV completion button acts. Levels 01–03 are fully playable.
+- Side ops outside Levels 01–03 show an honest `NOT AVAILABLE / Later phase` panel; Levels 01–03 side ops are playable.
+- Level 04 engine, pandas-like session, tabs and real stage flow (Phases 5–8). **Phase 5 is next.**
+- Bonus evaluators for Levels 04–07 return `false` until each level defines its real conditions.
 - Achievements and Tool Bay panels are visibly disabled placeholders (later phases).
 - Settings remains disabled on the title screen.
-- Adaptive tier selection (Phase 10) and real tier multipliers in the UI; Level 01 currently runs at `assisted`.
+- Adaptive tier selection (Phase 10) and real tier multipliers in the UI; Levels 01–03 currently run at `assisted`.
 - `/dev/ui` is not yet gated by `import.meta.env.DEV` (Phase 13).
 
 ## Known issues
@@ -171,6 +216,8 @@ State shape: `SaveData` (`profile`, `levels`, `achievements`, `fragments`, `adap
 - Debrief data is transient: reloading `/level/:id/debrief` shows the “no award summary” message even though progress and XP persist.
 - Reloading mid-mission restarts the run because the active mission session is intentionally not persisted.
 - Side ops pay once; there is no per-op best-score tracking yet.
+- Manual browser verification of the Level 02/03 stages, side ops, bonuses, debrief and replay is still pending.
+- Level 02/03 reference solutions have unit tests, and SliceLab/VectorLab have completion tests, but there is no full automated mission playthrough covering every UI stage and side op.
 - Level 01 has no typed-command entry yet; command input is scheduled with the progressive coding phases.
 - No README yet (final deliverable phase).
 - Bundle includes Fontsource subsets for several scripts; acceptable, can be pruned later if size matters.
@@ -199,4 +246,28 @@ Phase 3 VERIFY list:
 7. Return to the briefing SIDE OPS tab. Play TYPE TRAP (six expressions) and DICT DETECTIVE (four access chains). Each runs in the same shell with hints and its own debrief.
 8. Earn CLEAN SWEEP by finishing intake sorting with no wrong drops, and NO ASSISTANCE by never revealing a hint. Earn the hidden EASTER EGG by decoding the `NEXUS_ZERO` line in stage 2. Each pays once.
 9. Start a mission, use ABORT and confirm. No XP is paid and the briefing returns; cancelling the modal stays in the mission.
-10. Level 02 still shows an honest placeholder workspace; unlock all in the dev panel to check it. No fake controls appear.
+10. Levels 04–07 still show honest placeholder workspaces; unlock all in the dev panel to check them. No fake controls appear.
+
+Phase 4 VERIFY list (manual browser acceptance still pending):
+
+1. `npm run verify` passes: typecheck, 160 tests in 24 files, production build.
+2. Create a fresh save, complete Level 1, and confirm Level 2 opens.
+3. Open the Level 02 briefing. BRIEFING | SIDE OPS | BONUS switch with the URL; hidden DEAD CODE shows `???`.
+4. Play BRANCH LOGIC. Reorder rules with the up/down controls, add the `AND source == 'unknown'` condition, run the 12 packets, confirm wrong-order feedback and complete only when all 12 match.
+5. Play LOOP ENGINE and hit all three goals: sum 131, count 3 before the first corrupt packet, and the non-empty append target.
+6. Play FUNCTION FORGE. Assemble `is_valid` and `risk_score`, confirm failing hidden tests show input details, then run the 20-packet reuse loop.
+7. Play both Level 02 side ops: OFF-BY-ONE and BOOLEAN GAUNTLET.
+8. Earn or verify ELEGANT RULES, ZERO RETRIES and hidden DEAD CODE. Each pays once.
+9. Finish Level 02 and confirm debrief decisions, rating, XP/credits, F2, bonus awards and transition to Level 3.
+10. Replay Level 02 and confirm no XP is paid without improvement.
+11. Open the Level 03 briefing and play GRID ANATOMY: answer all four anatomy questions and build all three target arrays.
+12. Play SLICE THE SIGNAL: complete the row, column, block, stepped-column and threshold-30 mask goals. Confirm the mask must be applied and typed masks sync the threshold.
+13. Play VECTOR POWER: normalise the grid, inspect the operation chips, find column 4, compare with the Python loop, use the one-liner and flag the +0.4 pattern.
+14. Play both Level 03 side ops: RESHAPE RUSH (1D, 2D and 2×2×3) and MASK MASTER (exact four-cell isolation with precision/recall feedback).
+15. Earn or verify ONE-LINER, NO HINTS and hidden PATTERN. Each pays once.
+16. Finish Level 03 and confirm debrief decisions, rating, XP/credits, F3, bonus awards and Level 4 unlock.
+17. Replay Level 03 and confirm no XP is paid without improvement.
+18. Reload after completion and confirm the save, XP, unlocked levels and fragments persist.
+19. Confirm locked Level 3/4 routes redirect to the hub with a toast.
+20. Re-run the Level 01 regression flow from the Phase 3 list.
+21. Check keyboard focus, modal Esc, `aria-live` feedback, reduced motion, and the responsive layout at 1024 px, 768 px and below.

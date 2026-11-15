@@ -2,6 +2,8 @@
 import type { BonusDef, LevelDefinition, LevelId, SideOpDef, StageDef } from '../types'
 import { LEVEL_IDS } from '../config'
 import { LEVEL_1 } from '../../levels/l01/definition'
+import { LEVEL_2 } from '../../levels/l02/definition'
+import { LEVEL_3 } from '../../levels/l03/definition'
 
 /** Story fragments revealed when the matching main mission is completed. */
 export const FRAGMENT_TEXT: Record<string, string> = {
@@ -52,54 +54,8 @@ const sideOps = (first: SideOpDef, second: SideOpDef): SideOpDef[] => [first, se
 
 export const LEVELS: LevelDefinition[] = [
   LEVEL_1,
-  {
-    id: 2,
-    title: 'LOGIC PROTOCOL',
-    syllabus: 'Control flow, loops, functions',
-    mission: 'GATEKEEPER',
-    briefing:
-      "A rulebook survived the crash. Conditions, loops and functions still decide who enters the campus network. Rebuild the gatekeeper's logic without letting a single edge case slip through.",
-    objectives: [
-      'Reconstruct the access conditions',
-      'Trace and repair the patrol loops',
-      'Seal reusable checks inside functions',
-    ],
-    stages: [
-      stage('l2-stage-1', 'GATE LOGIC', 'Conditions first', 'Check the most specific case first.', 'An else branch should cover the remaining states.'),
-      stage('l2-stage-2', 'LOOP LADDER', 'Repeat with intent', 'A while loop needs a state change inside.', 'Prefer for loops when the collection is known.'),
-      stage('l2-stage-3', 'FUNCTION VAULT', 'Reusable rules', 'A function should do one thing.', 'Return values beat printing from inside a function.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l2-side-1', 'BRANCH AUDIT', 'Find the condition that never fires.', 'Trace each branch with a boundary value.', 'Look for overlapping conditions.'),
-      sideOp('l2-side-2', 'RECURSION RELAY', 'Unroll a recursive check.', 'Every recursive function needs a base case.', 'State must move toward the base case.'),
-    ),
-    bonuses: bonuses(2),
-    fragmentId: 'F2',
-  },
-  {
-    id: 3,
-    title: 'MATRIX CORE',
-    syllabus: 'NumPy arrays, slicing, masks, vectorisation',
-    mission: 'SIGNAL GRID',
-    briefing:
-      'NEXUS remembers a grid of sensors, not a list of them. Learn to think in whole arrays: slice, mask and vectorise until one operation speaks for a hundred.',
-    objectives: [
-      'Load the sensor grid as an array',
-      'Slice the signal bands without loops',
-      'Apply boolean masks to isolate faults',
-    ],
-    stages: [
-      stage('l3-stage-1', 'ARRAY CALIBRATION', 'Shape and dtype', 'Shape describes dimensions; dtype describes values.', 'Indexing starts at zero.'),
-      stage('l3-stage-2', 'SLICE CORRIDOR', 'Rows and columns', 'A comma separates axis slices.', 'A slice keeps the original dimension.'),
-      stage('l3-stage-3', 'MASK ENGINE', 'Vectorised filters', 'A comparison on an array returns a boolean mask.', 'Combine masks with & and |, not and/or.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l3-side-1', 'BROADCAST LAB', 'Align arrays of different shapes.', 'Broadcasting expands size-one dimensions.', 'Shapes align from the right.'),
-      sideOp('l3-side-2', 'STRIDE SCAN', 'Sample a grid without copying.', 'Strides describe how many bytes each step skips.', 'A view shares memory with the original.'),
-    ),
-    bonuses: bonuses(3),
-    fragmentId: 'F3',
-  },
+  LEVEL_2,
+  LEVEL_3,
   {
     id: 4,
     title: 'DATA VAULT',

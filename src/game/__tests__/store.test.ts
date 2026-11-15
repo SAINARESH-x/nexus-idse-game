@@ -44,6 +44,22 @@ describe('campaign lifecycle', () => {
     expect(state().fragments).toEqual(['F1'])
   })
 
+  it('completes Levels 2 and 3, unlocks the next level and recovers F2/F3', () => {
+    state().newGame('Test')
+    state().completeMission(1, DEV_DEMO_AGGREGATE)
+    state().completeMission(2, DEV_DEMO_AGGREGATE)
+    expect(state().levels[2].completed).toBe(true)
+    expect(state().levels[3].unlocked).toBe(true)
+    expect(state().fragments).toEqual(['F1', 'F2'])
+    expect(state().profile.xp).toBe(260)
+
+    state().completeMission(3, DEV_DEMO_AGGREGATE)
+    expect(state().levels[3].completed).toBe(true)
+    expect(state().levels[4].unlocked).toBe(true)
+    expect(state().fragments).toEqual(['F1', 'F2', 'F3'])
+    expect(state().profile.xp).toBe(420)
+  })
+
   it('pays nothing for a repeated main mission with no improvement', () => {
     state().newGame('Test')
     state().completeMission(1, DEV_DEMO_AGGREGATE)

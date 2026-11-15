@@ -1,4 +1,4 @@
-// Mission workspace: Level 01 runs the real shell; other levels stay honest placeholders.
+// Mission workspace: dispatches the real shell for Levels 01–03; other levels stay honest placeholders.
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle2, Cpu, Lock } from 'lucide-react'
 import { isDevEnabled } from '../../app/dev'
@@ -6,13 +6,41 @@ import { DEV_DEMO_AGGREGATE } from '../../game/config'
 import { useGameStore } from '../../game/store'
 import { renderL01Challenge } from '../../levels/l01/challenges'
 import { L01_OBJECTIVES, L01_SIDE_OBJECTIVES } from '../../levels/l01/content'
-import type { ChallengeProps, StageDef } from '../../game/types'
+import { renderL02Challenge } from '../../levels/l02/challenges'
+import { L02_OBJECTIVES, L02_SIDE_OBJECTIVES } from '../../levels/l02/content'
+import { renderL03Challenge } from '../../levels/l03/challenges'
+import { L03_OBJECTIVES, L03_SIDE_OBJECTIVES } from '../../levels/l03/content'
+import type { ChallengeProps, LevelId, StageDef } from '../../game/types'
 import { MissionShell } from '../../shell/MissionShell'
 import { Badge } from '../../ui/Badge'
 import { NeonButton } from '../../ui/NeonButton'
 import { Panel } from '../../ui/Panel'
 import { useToast } from '../../ui/Toast'
 import { useLevelContext } from './LevelGate'
+
+interface LevelRuntime {
+  renderChallenge: (challengeId: string, props: ChallengeProps) => ReturnType<typeof renderL01Challenge>
+  mainObjectives: typeof L01_OBJECTIVES
+  sideObjectives: Record<string, typeof L01_OBJECTIVES>
+}
+
+const RUNTIME: Partial<Record<LevelId, LevelRuntime>> = {
+  1: {
+    renderChallenge: renderL01Challenge,
+    mainObjectives: L01_OBJECTIVES,
+    sideObjectives: L01_SIDE_OBJECTIVES,
+  },
+  2: {
+    renderChallenge: renderL02Challenge,
+    mainObjectives: L02_OBJECTIVES,
+    sideObjectives: L02_SIDE_OBJECTIVES,
+  },
+  3: {
+    renderChallenge: renderL03Challenge,
+    mainObjectives: L03_OBJECTIVES,
+    sideObjectives: L03_SIDE_OBJECTIVES,
+  },
+}
 
 function PlaceholderWorkspace() {
   const { levelId, level } = useLevelContext()
@@ -97,8 +125,8 @@ function SideOpUnavailable() {
       <Panel eyebrow="Side operation" title="NOT AVAILABLE" action={<Badge tone="amber">Later phase</Badge>}>
         <p className="flex items-start gap-2 rounded border border-border bg-panel2/60 p-4 text-sm text-muted">
           <Lock size={15} className="mt-0.5 shrink-0 text-amber" aria-hidden="true" />
-          This side operation has no playable challenge yet. Level 01 is the only level with side operations in this
-          phase; no simulated controls are shown.
+          This side operation has no playable challenge yet. Side operations for this level arrive in a later phase; no
+          simulated controls are shown.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <NeonButton onClick={() => navigate(`/level/${levelId}?tab=side`)}>Back to side ops</NeonButton>
@@ -115,8 +143,9 @@ export function Play() {
   const { levelId, level } = useLevelContext()
   const [params] = useSearchParams()
   const sideOpId = params.get('side')
+  const runtime = RUNTIME[levelId]
 
-  if (levelId !== 1) {
+  if (!runtime) {
     if (sideOpId) return <SideOpUnavailable />
     return <PlaceholderWorkspace />
   }
@@ -125,7 +154,7 @@ export function Play() {
 
   if (sideOpId && !sideOp) return <SideOpUnavailable />
 
-  const renderChallenge = (stage: StageDef, props: ChallengeProps) => renderL01Challenge(stage.id, props)
+  const renderChallenge = (stage: StageDef, props: ChallengeProps) => runtime.renderChallenge(stage.id, props)
 
   if (sideOp) {
     const stage: StageDef = {
@@ -143,7 +172,7 @@ export function Play() {
         sideOpId={sideOp.id}
         stages={[stage]}
         objectives={
-          L01_SIDE_OBJECTIVES[sideOp.id] ?? [{ id: `${sideOp.id}-obj`, label: sideOp.blurb }]
+          runtime.sideObjectives[sideOp.id] ?? [{ id: `${sideOp.id}-obj`, label: sideOp.blurb }]
         }
         renderChallenge={renderChallenge}
       />
@@ -157,7 +186,7 @@ export function Play() {
       missionTitle={level.mission}
       kind="main"
       stages={level.stages}
-      objectives={L01_OBJECTIVES}
+      objectives={runtime.mainObjectives}
       renderChallenge={renderChallenge}
     />
   )
