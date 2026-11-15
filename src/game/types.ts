@@ -51,10 +51,19 @@ export interface SideOpDef {
 }
 
 /**
- * Opaque handle to a live mission session. Each level owns its concrete
- * session shape; bonus evaluators narrow this value as needed.
+ * A completed (or in-progress) mission run. It carries the facts bonus
+ * evaluators need, plus every stage result and decision. Levels may add
+ * their own fields later via intersection types.
  */
-export type MissionSession = object
+export interface MissionSession {
+  levelId: LevelId
+  kind: 'main' | 'side'
+  results: Record<string, ChallengeResult>
+  hintsUsed: number
+  mistakes: number
+  decisions: Decision[]
+  facts: Record<string, number | string | boolean>
+}
 
 export interface BonusDef {
   id: string
@@ -62,6 +71,15 @@ export interface BonusDef {
   description: string
   hidden: boolean
   evaluate: (session: MissionSession) => boolean
+}
+
+/** Props every mission challenge receives from the shell. */
+export interface ChallengeProps {
+  id: string
+  difficulty: Tier
+  /** Up to three progressive hints; the shell also renders them in its footer. */
+  hints: string[]
+  onComplete: (result: ChallengeResult) => void
 }
 
 export interface LevelDefinition {

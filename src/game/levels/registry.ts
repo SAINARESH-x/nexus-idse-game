@@ -1,6 +1,7 @@
 // Level registry: the seven campaign definitions, fragments and placeholder content.
 import type { BonusDef, LevelDefinition, LevelId, SideOpDef, StageDef } from '../types'
 import { LEVEL_IDS } from '../config'
+import { LEVEL_1 } from '../../levels/l01/definition'
 
 /** Story fragments revealed when the matching main mission is completed. */
 export const FRAGMENT_TEXT: Record<string, string> = {
@@ -50,30 +51,7 @@ const bonuses = (level: number): BonusDef[] => [
 const sideOps = (first: SideOpDef, second: SideOpDef): SideOpDef[] => [first, second]
 
 export const LEVELS: LevelDefinition[] = [
-  {
-    id: 1,
-    title: 'THE INTERFACE',
-    syllabus: 'Python basics: data types, strings, lists, sets, tuples, dicts',
-    mission: 'FIRST CONTACT',
-    briefing:
-      'The first shard is a toolbox, not a memory. NEXUS still speaks in primitives: strings, numbers, lists, sets, tuples and dicts. Teach it to name what it sees before it can reason about anything else.',
-    objectives: [
-      'Classify every incoming value by Python type',
-      'Repair the ordered and unordered collections',
-      'Restore the keyed record store',
-    ],
-    stages: [
-      stage('l1-stage-1', 'TYPE SCAN', 'Name the primitive', 'A quoted value is always a string.', 'Decimals default to float, whole numbers to int.'),
-      stage('l1-stage-2', 'SEQUENCE REPAIR', 'Order matters', 'Lists keep order and duplicates; sets do not.', 'Tuples are immutable once built.'),
-      stage('l1-stage-3', 'DICTIONARY UPLINK', 'Keyed records', 'Every dict key must be hashable.', 'Look up values by key, not by position.'),
-    ],
-    sideOps: sideOps(
-      sideOp('l1-side-1', 'STRING FORGE', 'Normalise a batch of callsigns.', 'strip removes outer whitespace.', 'title case is not the same as lower case.'),
-      sideOp('l1-side-2', 'SET RECONCILER', 'De-duplicate sensor IDs without a loop.', 'A set drops duplicates automatically.', 'Convert back to a list only when order matters.'),
-    ),
-    bonuses: bonuses(1),
-    fragmentId: 'F1',
-  },
+  LEVEL_1,
   {
     id: 2,
     title: 'LOGIC PROTOCOL',

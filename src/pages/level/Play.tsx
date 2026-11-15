@@ -1,16 +1,20 @@
-// Mission workspace placeholder with the developer-only completion shortcut.
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Cpu } from 'lucide-react'
+// Mission workspace: Level 01 runs the real shell; other levels stay honest placeholders.
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, CheckCircle2, Cpu, Lock } from 'lucide-react'
 import { isDevEnabled } from '../../app/dev'
 import { DEV_DEMO_AGGREGATE } from '../../game/config'
 import { useGameStore } from '../../game/store'
+import { renderL01Challenge } from '../../levels/l01/challenges'
+import { L01_OBJECTIVES, L01_SIDE_OBJECTIVES } from '../../levels/l01/content'
+import type { ChallengeProps, StageDef } from '../../game/types'
+import { MissionShell } from '../../shell/MissionShell'
 import { Badge } from '../../ui/Badge'
 import { NeonButton } from '../../ui/NeonButton'
 import { Panel } from '../../ui/Panel'
 import { useToast } from '../../ui/Toast'
 import { useLevelContext } from './LevelGate'
 
-export function Play() {
+function PlaceholderWorkspace() {
   const { levelId, level } = useLevelContext()
   const navigate = useNavigate()
   const { push } = useToast()
@@ -18,6 +22,7 @@ export function Play() {
   const dev = isDevEnabled()
 
   const handleDevComplete = () => {
+    // DEV_ONLY: mission completion shortcut for verification.
     const award = completeMission(levelId, DEV_DEMO_AGGREGATE)
     push({
       message:
@@ -56,8 +61,8 @@ export function Play() {
           <div>
             <p className="text-sm text-text">Mission workspace online.</p>
             <p className="mt-1 text-xs leading-relaxed text-muted">
-              The interactive mechanics for <span className="text-cyan">{level.title}</span> arrive in the phase
-              that owns this level. No simulated controls are shown here.
+              The interactive mechanics for <span className="text-cyan">{level.title}</span> arrive in the phase that
+              owns this level. No simulated controls are shown here.
             </p>
           </div>
         </div>
@@ -81,5 +86,79 @@ export function Play() {
         </div>
       </Panel>
     </main>
+  )
+}
+
+function SideOpUnavailable() {
+  const { levelId } = useLevelContext()
+  const navigate = useNavigate()
+  return (
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <Panel eyebrow="Side operation" title="NOT AVAILABLE" action={<Badge tone="amber">Later phase</Badge>}>
+        <p className="flex items-start gap-2 rounded border border-border bg-panel2/60 p-4 text-sm text-muted">
+          <Lock size={15} className="mt-0.5 shrink-0 text-amber" aria-hidden="true" />
+          This side operation has no playable challenge yet. Level 01 is the only level with side operations in this
+          phase; no simulated controls are shown.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <NeonButton onClick={() => navigate(`/level/${levelId}?tab=side`)}>Back to side ops</NeonButton>
+          <NeonButton variant="ghost" onClick={() => navigate('/hub')}>
+            Return to hub
+          </NeonButton>
+        </div>
+      </Panel>
+    </main>
+  )
+}
+
+export function Play() {
+  const { levelId, level } = useLevelContext()
+  const [params] = useSearchParams()
+  const sideOpId = params.get('side')
+
+  if (levelId !== 1) {
+    if (sideOpId) return <SideOpUnavailable />
+    return <PlaceholderWorkspace />
+  }
+
+  const sideOp = sideOpId ? level.sideOps.find((item) => item.id === sideOpId) : undefined
+
+  if (sideOpId && !sideOp) return <SideOpUnavailable />
+
+  const renderChallenge = (stage: StageDef, props: ChallengeProps) => renderL01Challenge(stage.id, props)
+
+  if (sideOp) {
+    const stage: StageDef = {
+      id: sideOp.id,
+      title: sideOp.title,
+      subtitle: sideOp.blurb,
+      hints: sideOp.hints,
+    }
+    return (
+      <MissionShell
+        levelId={levelId}
+        levelTitle={level.title}
+        missionTitle={sideOp.title}
+        kind="side"
+        sideOpId={sideOp.id}
+        stages={[stage]}
+        objectives={
+          L01_SIDE_OBJECTIVES[sideOp.id] ?? [{ id: `${sideOp.id}-obj`, label: sideOp.blurb }]
+        }
+        renderChallenge={renderChallenge}
+      />
+    )
+  }
+
+  return (
+    <MissionShell
+      levelId={levelId}
+      levelTitle={level.title}
+      missionTitle={level.mission}
+      kind="main"
+      stages={level.stages}
+      objectives={L01_OBJECTIVES}
+      renderChallenge={renderChallenge}
+    />
   )
 }
