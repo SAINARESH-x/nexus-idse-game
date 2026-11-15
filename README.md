@@ -1,5 +1,14 @@
 # NEXUS
 
+## 🎮 Play NEXUS
+
+**[▶ Play NEXUS Online](https://sainaresh-x.github.io/nexus-idse-game/)**
+
+No installation required — play directly in your browser.
+
+**[View Source Code](https://github.com/SAINARESH-x/nexus-idse-game)**
+
+
 **A mission-based browser game for _Introduction to Data Science for Engineers_ (IDSE), Semester 5.**
 
 NEXUS is a campus intelligence that shattered when it learned to trust dirty data. You are the recruit who rebuilds it, one system and one memory fragment at a time. Each of the seven levels is a mission on real (generated) data, played through code-like operations whose consequences you can see. It is not a quiz: you order rules and run packets through them, slice arrays, clean a pandas-style table with undo and redo, build charts, run simulations and fit regression models.
