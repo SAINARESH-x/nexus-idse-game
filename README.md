@@ -96,7 +96,7 @@ src/
   game/         Types, config, progression, store, persistence, achievements, settings, sound, adaptive, level registry
   levels/       l01 … l07: definition, content, pure logic, components and tests per level
   test/         Test setup and the release audit
-docs/           PROGRESS.md (build log and decisions) and screenshots/
+docs/           screenshots/ (gameplay screenshots for project documentation)
 ```
 
 ## Screenshots
