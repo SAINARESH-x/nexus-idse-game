@@ -22,7 +22,7 @@ import { SmallScreenNotice } from './SmallScreenNotice'
 import { SystemsBridge } from './SystemsBridge'
 
 // DEV_ONLY: developer tools are code-split and only referenced in dev builds, so production bundles exclude them.
-const DevPanel = import.meta.env.DEV ? lazy(() => import('./DevPanel').then((m) => ({ default: m.DevPanel }))) : null
+const DevPanel = lazy(() => import('./DevPanel').then((m) => ({ default: m.DevPanel })))
 const DevUi = import.meta.env.DEV ? lazy(() => import('../pages/DevUi').then((m) => ({ default: m.DevUi }))) : null
 const DevEngine = import.meta.env.DEV ? lazy(() => import('../pages/DevEngine').then((m) => ({ default: m.DevEngine }))) : null
 
@@ -79,6 +79,26 @@ function RoutedApp() {
 
 export function App() {
   const [recovering, setRecovering] = useState(() => corruptSave() !== null)
+  const [showDevPanel, setShowDevPanel] = useState(import.meta.env.DEV)
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
+        event.key.toLowerCase() === 'd' &&
+        !event.repeat
+      ) {
+        event.preventDefault()
+        setShowDevPanel((current) => !current)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
   return (
     <ErrorBoundary>
       <ToastProvider>
@@ -101,10 +121,9 @@ export function App() {
           <HashRouter>
             <GridBackground />
             <RoutedApp />
-            {DevPanel && (
-              // DEV_ONLY
+            {showDevPanel && (
               <Suspense fallback={null}>
-                <DevPanel />
+                <DevPanel onHide={() => setShowDevPanel(false)} />
               </Suspense>
             )}
           </HashRouter>

@@ -1,5 +1,5 @@
 // DevPanel: floating developer controls gated by DEV or the nexus-dev flag.
-import { useState } from 'react'
+
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bug, CheckCircle2, EyeOff, RotateCcw, Unlock, Zap } from 'lucide-react'
 import { DEV_DEMO_AGGREGATE, LEVEL_IDS } from '../game/config'
@@ -8,10 +8,8 @@ import { rankForXp } from '../game/progression'
 import { useGameStore } from '../game/store'
 import { NeonButton } from '../ui/NeonButton'
 import { useToast } from '../ui/Toast'
-import { isDevEnabled } from './dev'
 
-export function DevPanel() {
-  const [hidden, setHidden] = useState(false)
+export function DevPanel({ onHide }: { onHide: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { push } = useToast()
@@ -23,9 +21,6 @@ export function DevPanel() {
   const completeAllLevels = useGameStore((state) => state.completeAllLevels)
   const addAdaptiveEntry = useGameStore((state) => state.addAdaptiveEntry)
   const history = useGameStore((state) => state.adaptive.history)
-
-  // DEV_ONLY: the whole panel is absent from production unless nexus-dev=1.
-  if (!isDevEnabled() || hidden) return null
 
   const match = /^\/level\/(\d+)/.exec(location.pathname)
   const routeLevel = parseLevelId(match?.[1])
@@ -126,7 +121,7 @@ export function DevPanel() {
           <RotateCcw size={12} aria-hidden="true" />
           Reset save
         </NeonButton>
-        <NeonButton size="sm" variant="ghost" data-testid="dev-hide" onClick={() => setHidden(true)}>
+        <NeonButton size="sm" variant="ghost" data-testid="dev-hide" onClick={onHide}>
           <EyeOff size={12} aria-hidden="true" />
           Hide panel
         </NeonButton>
