@@ -174,7 +174,7 @@ export function Briefing() {
       </p>
       {level.bonuses.map((item) => {
         const earned = progress.bonusesEarned.includes(item.id)
-        const secret = item.hidden && !earned
+        const secret = item.hidden && !earned && progress.stats.devRevealHiddenBonuses !== true
         return (
           <div
             key={item.id}

@@ -154,7 +154,7 @@ function MainDebrief() {
           {level.bonuses.map((b) => {
             const got = progress.bonusesEarned.includes(b.id)
             const now = rep.bonuses.find((x) => x.id === b.id)
-            return <li key={b.id} className={got ? 'text-green' : 'text-muted'}>{got ? '✓' : '○'} Bonus {b.hidden && !got ? '???' : b.title}{now ? ` (+${now.xpGained} XP this run)` : ''}</li>
+            return <li key={b.id} className={got ? 'text-green' : 'text-muted'}>{got ? '✓' : '○'} Bonus {b.hidden && !got && progress.stats.devRevealHiddenBonuses !== true ? '???' : b.title}{now ? ` (+${now.xpGained} XP this run)` : ''}</li>
           })}
           {level.sideOps.map((s) => <li key={s.id} className={progress.sideOpsDone.includes(s.id) ? 'text-green' : 'text-muted'}>{progress.sideOpsDone.includes(s.id) ? '✓' : '○'} Side op {s.title}</li>)}
         </ul>
