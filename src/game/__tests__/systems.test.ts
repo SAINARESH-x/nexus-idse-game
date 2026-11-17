@@ -102,7 +102,7 @@ describe('tool bay', () => {
     expect(bought?.owned).toEqual(['theme-magenta'])
     expect(buy({ ...save, owned: ['theme-magenta'] }, 'theme-magenta')).toBeNull()
     expect(canBuy(save, 'nope').ok).toBe(false)
-    expect(availableThemes(['theme-magenta'])).toEqual(['nexus', 'theme-magenta'])
+    expect(availableThemes([])).toEqual(['nexus', 'theme-magenta', 'theme-amber', 'theme-matrix', 'theme-crimson'])
   })
 
   it('spends credits in the store and unlocks supply-run', () => {
@@ -114,7 +114,11 @@ describe('tool bay', () => {
     state().setTheme('theme-magenta')
     expect(state().profile.theme).toBe('theme-magenta')
     state().setTheme('theme-amber')
-    expect(state().profile.theme).toBe('theme-magenta')
+    expect(state().profile.theme).toBe('theme-amber')
+    state().setTheme('theme-crimson')
+    expect(state().profile.theme).toBe('theme-crimson')
+    state().setTheme('invalid-theme')
+    expect(state().profile.theme).toBe('theme-crimson')
   })
 })
 

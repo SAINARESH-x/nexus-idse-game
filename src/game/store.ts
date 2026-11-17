@@ -20,7 +20,7 @@ import { migrateSave, saveStorage } from './persistence'
 import { newAchievements } from './achievements'
 import { LEVELS } from './levels/registry'
 import { buy } from './toolbay'
-import { DEFAULT_SETTINGS, normalizeSettings } from './settings'
+import { DEFAULT_SETTINGS, normalizeSettings, THEME_ACCENTS } from './settings'
 import type { Settings } from './settings'
 import type {
   AdaptiveEntry,
@@ -332,9 +332,8 @@ export const useGameStore = create<GameStore>()(
       },
 
       setTheme: (themeId) => {
-        const state = get()
-        if (themeId !== 'nexus' && !(state.owned ?? []).includes(themeId)) return
-        set({ profile: { ...state.profile, theme: themeId } })
+        if (!(themeId in THEME_ACCENTS)) return
+        set({ profile: { ...get().profile, theme: themeId } })
       },
 
       updateSettings: (patch) => {

@@ -40,4 +40,4 @@ export function buy(
 }
 
 /** Themes the player may apply: the free default plus owned ones. */
-export const availableThemes = (owned: readonly string[]): string[] => ['nexus', ...owned.filter((id) => id in THEME_ACCENTS)]
+export const availableThemes = (_owned: readonly string[]): string[] => Object.keys(THEME_ACCENTS)

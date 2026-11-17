@@ -27,9 +27,10 @@ export function normalizeSettings(raw: unknown): Settings {
 /** Accent themes: id -> RGB triplet for the --nx-cyan-rgb variable. 'nexus' (cyan) is free. */
 export const THEME_ACCENTS: Record<string, { name: string; rgb: string }> = {
   nexus: { name: 'NEXUS Cyan', rgb: '0 229 255' },
-  'theme-magenta': { name: 'Magenta Grid', rgb: '255 43 214' },
-  'theme-amber': { name: 'Amber Terminal', rgb: '255 176 32' },
+  'theme-magenta': { name: 'Cyberpunk Violet', rgb: '180 80 255' },
+  'theme-amber': { name: 'Solar Amber', rgb: '255 176 32' },
   'theme-matrix': { name: 'Matrix Green', rgb: '61 255 154' },
+  'theme-crimson': { name: 'Crimson Red', rgb: '255 65 95' },
 }
 
 let motionOverride: MotionSetting = 'auto'
